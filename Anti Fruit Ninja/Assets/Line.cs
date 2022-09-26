@@ -9,6 +9,7 @@ public class Line : MonoBehaviour
     public Mesh mesh;
     public MeshFilter filters;
     public MeshCollider collision;
+    public Mesh empty;
     public Camera main;
     private Ray view;
 
@@ -18,7 +19,6 @@ public class Line : MonoBehaviour
     private Vector3[] coords;
 
     //Variables
-    //Swap out point count for distances so you cannot stretch out long lines
     public int maxLength;
     public int maxDistance;
     public float sumDistance;
@@ -47,8 +47,22 @@ public class Line : MonoBehaviour
 
         //Get tap position and add it to a list
         if (mouseDown && Physics.Raycast(view, out RaycastHit hit)) {
-            if (Vector3.Distance(add, new Vector3(hit.point.x, hit.point.y, 0)) > 0.02f) {
+            if (Vector3.Distance(add, new Vector3(hit.point.x, hit.point.y, 0)) > 0.001f) {
                 add = new Vector3(hit.point.x, hit.point.y, 0);
+                points.Add(add);
+            }
+        }
+
+        //Add the distances between all points
+        sumDistance = 0;
+        for (int p = 1; p < points.Count; p++) {
+            sumDistance += Vector3.Distance(points[p - 1], points[p]);
+        }
+
+        //Distance of line will shrink after no longer tapping
+        if (newDown && sumDistance > maxDistance) {
+            points.RemoveAt(0);
+            if (points.Count < maxLength) {
                 points.Add(add);
             }
         }
@@ -56,11 +70,6 @@ public class Line : MonoBehaviour
         //Get list length and remove first points when length is too big
         if (points.Count > maxLength) {
             points.RemoveAt(0);
-        }
-
-        sumDistance = 0;
-        for (int p = 1; p < points.Count; p++) {
-            sumDistance += Vector3.Distance(points[p - 1], points[p]);
         }
 
         //When stop tapping, next tap will be a new line
@@ -71,7 +80,7 @@ public class Line : MonoBehaviour
         //When new tap, set every point to the tap location
         if (mouseDown && newDown) {
             newDown = false;
-            for (int i = 0; i < points.Count; i++) {
+            for (int i = 0; i < maxLength; i++) {
                 points[i] = add;
             }
         }
@@ -81,12 +90,23 @@ public class Line : MonoBehaviour
         drawn.SetPositions(coords);
 
         //Bake Mesh collider to interact with physics
-        if (Vector3.Distance(points[0], points[(int)Mathf.Clamp01(points.Count)]) > 0.01f) {
+        mesh.Clear();
+        if (sumDistance > 0) {
+            Triggering(false);
             drawn.BakeMesh(mesh, main, true);
             filters.mesh = mesh;
             collision.sharedMesh = mesh;
         } else {
-            mesh.Clear();
+            //Set collision to other placeholder
+            Triggering(true);
+            filters.mesh = empty;
+            collision.sharedMesh = empty;
         }
+    }
+
+    private void Triggering(bool onOff)
+    {
+        collision.convex = onOff;
+        collision.isTrigger = onOff;
     }
 }
