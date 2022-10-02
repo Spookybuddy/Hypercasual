@@ -26,12 +26,18 @@ public class Line : MonoBehaviour
     //New tap check
     private bool mouseDown;
     private bool newDown;
+    private bool makeMesh;
+
+    //Manager
+    public GameObject manager;
+    private GameManager script;
 
     void Start()
     {
         mesh = new Mesh();
         GetComponent<MeshFilter>().mesh = mesh;
         collision = GetComponent<MeshCollider>();
+        script = manager.GetComponent<GameManager>();
 
         drawn.positionCount = maxLength;
         drawn.startWidth = 0.1f;
@@ -46,43 +52,35 @@ public class Line : MonoBehaviour
         view = main.ScreenPointToRay(Input.mousePosition);
 
         //Get tap position and add it to a list
-        if (mouseDown && Physics.Raycast(view, out RaycastHit hit)) {
+        if (mouseDown && Physics.Raycast(view, out RaycastHit hit) && script.canDraw) {
             if (Vector3.Distance(add, new Vector3(hit.point.x, hit.point.y, 0)) > 0.001f) {
                 add = new Vector3(hit.point.x, hit.point.y, 0);
                 points.Add(add);
+                makeMesh = true;
             }
         }
 
         //Add the distances between all points
         sumDistance = 0;
-        for (int p = 1; p < points.Count; p++) {
-            sumDistance += Vector3.Distance(points[p - 1], points[p]);
-        }
+        for (int p = 1; p < points.Count; p++) sumDistance += Vector3.Distance(points[p - 1], points[p]);
 
         //Distance of line will shrink after no longer tapping
         if (newDown && sumDistance > maxDistance) {
             points.RemoveAt(0);
-            if (points.Count < maxLength) {
-                points.Add(add);
-            }
+            if (points.Count < maxLength) points.Add(add);
         }
 
         //Get list length and remove first points when length is too big
-        if (points.Count > maxLength) {
-            points.RemoveAt(0);
-        }
+        if (points.Count > maxLength) points.RemoveAt(0);
 
         //When stop tapping, next tap will be a new line
-        if (!mouseDown) {
-            newDown = true;
-        }
+        if (!mouseDown) newDown = true;
 
         //When new tap, set every point to the tap location
         if (mouseDown && newDown) {
             newDown = false;
-            for (int i = 0; i < maxLength; i++) {
-                points[i] = add;
-            }
+            makeMesh = false;
+            for (int i = 0; i < maxLength; i++) points[i] = add;
         }
 
         //Convert list to array and set line positions
@@ -91,22 +89,12 @@ public class Line : MonoBehaviour
 
         //Bake Mesh collider to interact with physics
         mesh.Clear();
-        if (sumDistance > 0) {
-            Triggering(false);
+        filters.mesh = empty;
+        collision.sharedMesh = empty;
+        if (makeMesh) {
             drawn.BakeMesh(mesh, main, true);
             filters.mesh = mesh;
             collision.sharedMesh = mesh;
-        } else {
-            //Set collision to other placeholder
-            Triggering(true);
-            filters.mesh = empty;
-            collision.sharedMesh = empty;
         }
-    }
-
-    private void Triggering(bool onOff)
-    {
-        collision.convex = onOff;
-        collision.isTrigger = onOff;
     }
 }
