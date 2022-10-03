@@ -10,14 +10,18 @@ public class Objects : MonoBehaviour
     public Rigidbody rig;
 
     public Vector3 spawn;
-    public float ranX;
-    public float ranY;
     private bool paused;
     private Vector3 storedVelo;
+    private bool hasHit;
 
     void Start()
     {
+        manager = GameObject.FindWithTag("GameController");
         script = manager.GetComponent<GameManager>();
+        spawn = transform.position;
+        hasHit = false;
+        rig.useGravity = false;
+        StartCoroutine(waitFor());
     }
 
     void Update()
@@ -36,11 +40,23 @@ public class Objects : MonoBehaviour
         }
 
         if (!MR.isVisible && Vector3.Distance(spawn, transform.position) > 10 && !paused) {
-            rig.velocity = Vector3.zero;
-            storedVelo = Vector3.zero;
-            spawn = new Vector3(Random.Range(-ranX, ranX), Random.Range(-ranY, ranY), 0);
-            transform.position = spawn;
-            rig.AddForce(-1.5f * transform.position, ForceMode.Impulse);
+            Destroy(gameObject);
+        }
+    }
+
+    IEnumerator waitFor()
+    {
+        yield return new WaitForSeconds(0.5f);
+        rig.useGravity = true;
+        rig.AddForce(new Vector3(-1.25f * spawn.x, -1.33333f * spawn.y + 3, 0), ForceMode.Impulse);
+        rig.AddTorque(Vector3.forward * 4 * Mathf.Sign(Random.Range(-1, 1)), ForceMode.Impulse);
+    }
+
+    void OnTriggerEnter(Collider collision)
+    {
+        if (!hasHit && !collision.CompareTag("Finish")) {
+            script.points++;
+            hasHit = true;
         }
     }
 }
