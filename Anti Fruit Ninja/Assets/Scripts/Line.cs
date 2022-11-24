@@ -31,6 +31,7 @@ public class Line : MonoBehaviour
     //Manager
     public GameObject manager;
     private GameManager script;
+    private float offset;
 
     void Start()
     {
@@ -44,6 +45,7 @@ public class Line : MonoBehaviour
         drawn.endWidth = 0.25f;
 
         sumDistance = 0;
+        offset = 0;
     }
 
     void Update()
@@ -51,12 +53,65 @@ public class Line : MonoBehaviour
         mouseDown = Input.GetMouseButton(0);
         view = main.ScreenPointToRay(Input.mousePosition);
 
-        if (script.rainbowMode) Rainbow();
-        else Normal();
+        switch (script.mode) {
+            case 0:
+                White();
+                break;
+            case 1:
+                Grey();
+                break;
+            case 2:
+                Black();
+                break;
+            case 3:
+                Graydient();
+                break;
+            case 4:
+                Greydient();
+                break;
+            case 5:
+                Red();
+                break;
+            case 6:
+                Orange();
+                break;
+            case 7:
+                Yellow();
+                break;
+            case 8:
+                Green();
+                break;
+            case 9:
+                DarkGreen();
+                break;
+            case 10:
+                Cyan();
+                break;
+            case 11:
+                Blue();
+                break;
+            case 12:
+                Magenta();
+                break;
+            case 13:
+                Purple();
+                break;
+            case 14:
+                Rainbow();
+                break;
+            case 15:
+                offset += 10 * Time.deltaTime;
+                Disco(Mathf.RoundToInt(offset));
+                break;
+            default:
+                White();
+                break;
+        }
 
         //Get tap position and add it to a list
         if (mouseDown && Physics.Raycast(view, out RaycastHit hit) && (script.canDraw || script.canDoodle)) {
             if (Vector3.Distance(add, new Vector3(hit.point.x, hit.point.y, 0)) > 0.001f) {
+                if (!newDown) script.Scroll(hit.point.y - add.y);
                 add = new Vector3(hit.point.x, hit.point.y, 0);
                 points.Add(add);
                 makeMesh = true;
@@ -108,32 +163,76 @@ public class Line : MonoBehaviour
         }
     }
 
-    private void Normal()
-    {
-        Gradient gradient = new Gradient();
-        GradientColorKey[] normals = new GradientColorKey[1];
-        GradientAlphaKey[] alphas = new GradientAlphaKey[2];
-        normals[0] = new GradientColorKey(Color.white, 1);
-        alphas[0] = new GradientAlphaKey(1, 0);
-        alphas[1] = new GradientAlphaKey(1, 1);
-        drawn.colorGradient = gradient;
+    //Solid grayscale colors
+    private void White() { SetGradient(Solid(Color.white)); }
+
+    private void Grey() { SetGradient(Solid(Color.gray)); }
+
+    private void Black() { SetGradient(Solid(Color.black)); }
+
+    private void Graydient() {
+        Color[] list = new Color[3] { Color.white, Color.gray, Color.black };
+        SetGradient(Grad(list, 3));
     }
 
-    private void Rainbow()
+    private void Greydient()
     {
+        Color[] list = new Color[3] { Color.black, Color.gray, Color.white };
+        SetGradient(Grad(list, 3));
+    }
+
+    //Solid Basic colors
+    private void Red() { SetGradient(Solid(Color.red)); }
+
+    private void Orange() { SetGradient(Solid(new Color(1, 0.502f, 0))); }
+
+    private void Yellow() { SetGradient(Solid(Color.yellow)); }
+
+    private void Green() { SetGradient(Solid(Color.green)); }
+
+    private void DarkGreen() { SetGradient(Solid(new Color(0.106f, 0.553f, 0.239f))); }
+
+    private void Cyan() { SetGradient(Solid(Color.cyan)); }
+
+    private void Blue() { SetGradient(Solid(Color.blue)); }
+
+    private void Magenta() { SetGradient(Solid(Color.magenta)); }
+
+    private void Purple() { SetGradient(Solid(new Color(0.639f, 0.286f, 0.643f))); }
+
+    private void Rainbow() {
+        Color[] list = new Color[7] { Color.red, Color.yellow, Color.green, Color.cyan, Color.blue, Color.magenta, Color.red };
+        SetGradient(Grad(list, 7));
+    }
+
+    private void Disco(int count) {
+        Color[] list = new Color[7] { Color.red, Color.yellow, Color.green, Color.cyan, Color.blue, Color.magenta, Color.red };
+        GradientColorKey[] colour = new GradientColorKey[7];
+        for (int i = 0; i < 7; i++) colour[i] = new GradientColorKey(list[(i + count) % 7], i / 6f);
+        SetGradient(colour);
+    }
+
+    //Return a solid color
+    private GradientColorKey[] Solid(Color c) {
+        return new GradientColorKey[1] { new GradientColorKey(c, 1) };
+    }
+
+    //Return a gradient color
+    private GradientColorKey[] Grad(Color[] c, int length) {
+        GradientColorKey[] colour = new GradientColorKey[length];
+        for (int i = 0; i < length; i++) colour[i] = new GradientColorKey(c[i], i / (float)(length - 1));
+        return colour;
+    }
+
+    //Return the alpha
+    private GradientAlphaKey[] AllAlphas() {
+        return new GradientAlphaKey[2] { new GradientAlphaKey(1, 0), new GradientAlphaKey(1, 1) };
+    }
+
+    //Set the desired values
+    private void SetGradient(GradientColorKey[] C) {
         Gradient gradient = new Gradient();
-        GradientColorKey[] rainbows = new GradientColorKey[7];
-        GradientAlphaKey[] alphas = new GradientAlphaKey[2];
-        rainbows[0] = new GradientColorKey(Color.red, 0);
-        rainbows[1] = new GradientColorKey(Color.yellow, 0.166f);
-        rainbows[2] = new GradientColorKey(Color.green, 0.333f);
-        rainbows[3] = new GradientColorKey(Color.cyan, 0.5f);
-        rainbows[4] = new GradientColorKey(Color.blue, 0.666f);
-        rainbows[5] = new GradientColorKey(Color.magenta, 0.833f);
-        rainbows[6] = new GradientColorKey(Color.red, 1);
-        alphas[0] = new GradientAlphaKey(1, 0);
-        alphas[1] = new GradientAlphaKey(1, 1);
-        gradient.SetKeys(rainbows, alphas);
+        gradient.SetKeys(C, AllAlphas());
         drawn.colorGradient = gradient;
     }
 }

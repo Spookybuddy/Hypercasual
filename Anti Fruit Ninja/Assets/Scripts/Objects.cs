@@ -27,12 +27,14 @@ public class Objects : MonoBehaviour
     void Update()
     {
         if (!paused) {
+            //Enter pause, record velo
             if (!script.canDraw) {
                 rig.useGravity = false;
                 storedVelo = rig.velocity;
                 rig.velocity = Vector3.zero;
                 paused = true;
             }
+            //Exit pause, set velo to recorded
         } else if (script.canDraw) {
             rig.useGravity = true;
             rig.velocity = storedVelo;
@@ -44,7 +46,7 @@ public class Objects : MonoBehaviour
         }
     }
 
-    IEnumerator waitFor()
+    private IEnumerator waitFor()
     {
         yield return new WaitForSeconds(0.5f);
         rig.useGravity = true;
