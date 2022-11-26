@@ -15,7 +15,11 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI wallet;
     public GameObject gameOver;
     public GameObject shopMenu;
-    public GameObject shopScroll;
+    public GameObject shopBase;
+    public GameObject shopLine;
+    public GameObject shopBack;
+    public GameObject shopFruit;
+    public GameObject[] shopScroll;
     public GameObject confirm;
     public GameObject refusal;
     public GameObject trophy;
@@ -31,63 +35,121 @@ public class GameManager : MonoBehaviour
     private bool mained;
     private bool paused;
     private bool shopping;
+    private bool lines;
+    private bool backs;
+    private bool fruit;
     private bool confirming;
     private bool rejecting;
     private Vector2 price;
-    public int DESIGNS;
+
+    public Backgrounds BG;
+    public Fruits FT;
+    public Line LN;
+    private int currentMenu;
+    public int[] DESIGNS;
 
     private float difficultyTime;
     private int past;
     public int points;
 
     //Save data
-    public int best;
+    private int best;
     public int currency;
-    public List<int> unlocked = new List<int>();
+    private List<int> unlocked = new List<int>();
+    private string draws;
+    private List<int> unlocked2 = new List<int>();
+    private string basket;
+    private List<int> unlocked3 = new List<int>();
+    private string area;
+
+    private List<List<int>> unlocks = new List<List<int>>();
+    private string[] strings = new string[3];
+
+    private string list;
+    private string[] split;
+    private int[] unlock;
+
     public int mode;
+    public int food;
+    public int ground;
 
     void Start()
     {
+        //Get any saved data
         best = GetSaveData("Record");
         currency = GetSaveData("Money");
         mode = GetSaveData("Design");
+        food = GetSaveData("Defend");
+        ground = GetSaveData("Picture");
+        draws = GetStringData("Inventory");
+        basket = GetStringData("Fruits");
+        area = GetStringData("Background");
 
-        mode = 0;
+        unlocks.Insert(0, unlocked);
+        unlocks.Insert(1, unlocked2);
+        unlocks.Insert(2, unlocked3);
+        strings[0] = draws;
+        strings[1] = basket;
+        strings[2] = area;
+
+        //Start on main
         mained = true;
         paused = false;
         canDraw = false;
         shopping = false;
         maxObjects = 0;
+        currentMenu = 0;
         MR = trophy.GetComponent<Renderer>();
 
-        for (int i = 0; i < DESIGNS; i++) {
-            if (unlocked.Contains(i)) SetText(i);
-        }
+        //Update shop text
+        list = draws;
+        ConvertData(unlocked);
+        list = basket;
+        ConvertData(unlocked2);
+        list = area;
+        ConvertData(unlocked3);
+        for (int i = 0; i < DESIGNS[0]; i++) if (unlocked.Contains(i)) SetText(i);
+        for (int i = 0; i < DESIGNS[1]; i++) if (unlocked2.Contains(i)) SetText(i);
+        for (int i = 0; i < DESIGNS[2]; i++) if (unlocked3.Contains(i)) SetText(i);
+
+        BG.Mat(ground);
+        FT.Swap(food);
     }
 
     void Update()
     {
+        //Show desired menu
         mainMenu.SetActive(mained);
         pauseMenu.SetActive(paused);
         gameMenu.SetActive(canDraw);
         shopMenu.SetActive(shopping);
+        shopBase.SetActive(!(lines || fruit || backs));
+        shopLine.SetActive(lines);
+        shopFruit.SetActive(fruit);
+        shopBack.SetActive(backs);
         confirm.SetActive(confirming);
         refusal.SetActive(rejecting);
         gameOver.SetActive((!MR.isVisible && !mained));
+
+        //Bools based on what menus are active
         canDraw = !(paused || mained || shopping);
         canDoodle = (mained || shopping);
         maxObjects = canDraw ? past : 0;
 
+        //Add timer, max objects based on time passed
         if (canDraw) difficultyTime += Time.deltaTime;
         past = Mathf.FloorToInt(difficultyTime / 20) + 1;
 
+        //Update texts
         score.text = "Score: " + points.ToString();
         total.text = "Final Score:\n" + points.ToString();
         record.text = "Record: " + best.ToString();
         wallet.text = "$" + currency.ToString();
 
+        //Orange knocked away: lose
         if (!MR.isVisible && !mained) Over();
 
+        //Spawn new bomb when #bomb is below desired amount
         if (actives.Count < past && canDraw) {
             warnings.Insert(0, new Vector3(2.5f * Mathf.Sign(Random.Range(-1, 1)), Random.Range(-5, 5), 0));
             Vector3 outside = warnings[0] + new Vector3(warnings[0].x, 0, 0);
@@ -96,6 +158,7 @@ public class GameManager : MonoBehaviour
             Instantiate(exclaim, warnings[0], Quaternion.identity);
         }
 
+        //Once bomb is gone, remove from lists to spawn new one
         for (int i = 0; i < actives.Count; i++) {
             if (actives[i] == null) {
                 warnings.RemoveAt(i);
@@ -104,12 +167,14 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    //Open pause menu, halt gameplay
     public void Pause(bool onOff)
     {
         paused = onOff;
         canDraw = !onOff;
     }
 
+    //Main menu T/F, reset timer, orange, add points, clear bombs
     public void Main(bool onOff)
     {
         mained = onOff;
@@ -120,6 +185,8 @@ public class GameManager : MonoBehaviour
         Rigidbody component = trophy.GetComponent<Rigidbody>();
         component.velocity = Vector3.zero;
         component.angularVelocity = Vector3.zero;
+
+        //Record highest, double reward $
         if (points > best) {
             best = points;
             currency += best;
@@ -130,15 +197,17 @@ public class GameManager : MonoBehaviour
         foreach (GameObject i in clear) {
             Destroy(i);
         }
-        shopScroll.transform.localPosition = Vector3.zero;
+        foreach(GameObject menu in shopScroll) menu.transform.localPosition = Vector3.zero;
         shopping = false;
 
         //Save data
         SaveData("Record", best);
         SaveData("Money", currency);
         SaveData("Design", mode);
+        PlayerPrefs.SetString("Inventory", draws);
     }
 
+    //Gameplay
     public void Game()
     {
         canDraw = true;
@@ -146,6 +215,7 @@ public class GameManager : MonoBehaviour
         mained = false;
     }
 
+    //Gameover
     public void Over()
     {
         canDraw = false;
@@ -153,13 +223,13 @@ public class GameManager : MonoBehaviour
         mained = false;
     }
 
+    //Function takes NXXX, with N being design number & XXX being cost
     public void Item(int NumCost)
     {
         if (!confirming) {
             int num = NumCost/1000;
             int cost = NumCost - (num * 1000);
-            Debug.Log("#" + num + " : $" + cost);
-            if (!unlocked.Contains((int)NumCost)) {
+            if (!unlocks[currentMenu].Contains((int)num)) {
                 if (currency >= (int)cost) {
                     price = new Vector2(num, cost);
                     confirming = true;
@@ -168,54 +238,102 @@ public class GameManager : MonoBehaviour
                     StartCoroutine(Wait());
                 }
             } else {
-                mode = (int)NumCost;
+                Change((int)num);
             }
         }
     }
 
+    //Confirm/deny purchase
     public void Purchase(bool buy)
     {
         if (buy) {
-            mode = (int)price.x;
+            //Buy: Set current design, then add new purchase to save data and list
+            Change((int)price.x);
             currency -= (int)price.y;
-            unlocked.Add((int)price.x);
+            list = strings[currentMenu] + (((int)price.x).ToString() + "_");
+            ConvertData(unlocks[currentMenu]);
             SetText((int)price.x);
-            confirming = false;
-        } else {
-            confirming = buy;
         }
+        confirming = false;
     }
 
+    //Change desired value 
+    private void Change(int val)
+    {
+        switch (currentMenu) {
+            case 0:
+                mode = val;
+                break;
+            case 1:
+                food = val;
+                break;
+            case 2:
+                ground = val;
+                break;
+        }
+        BG.Mat(ground);
+        FT.Swap(food);
+        LN.Design(mode);
+    }
+
+    //Remove the price of designs already purchased
     public void SetText(int ID)
     {
-        shopScroll.transform.GetChild(ID).GetChild(1).GetComponent<TextMeshProUGUI>().text = " ";
+        shopScroll[currentMenu].transform.GetChild(ID).GetChild(1).GetComponent<TextMeshProUGUI>().text = " ";
     }
 
+    //Reset shop position and open shop menu
     public void Shop()
     {
-        shopScroll.transform.localPosition = Vector3.zero;
+        foreach(GameObject menu in shopScroll) menu.transform.localPosition = Vector3.zero;
         mained = false;
         shopping = true;
     } 
 
-    public void Scroll(float move)
+    //Set submenu to true/false based on input value
+    public void SubMenu(int menu)
     {
-        Vector3 pos = shopScroll.transform.localPosition;
-        shopScroll.transform.localPosition = new Vector3(pos.x, Mathf.Clamp(pos.y + (150 * move), 0, 300 * (DESIGNS - 6)), pos.z);
+        currentMenu = Mathf.Max(menu - 1, 0);
+        Shop();
+        lines = (menu == 1);
+        fruit = (menu == 2);
+        backs = (menu == 3);
     }
 
+    //Move shop menu with swipe
+    public void Scroll(float move)
+    {
+        Vector3 pos = shopScroll[currentMenu].transform.localPosition;
+        shopScroll[currentMenu].transform.localPosition = new Vector3(pos.x, Mathf.Clamp(pos.y + (150 * move), 0, 300 * (DESIGNS[currentMenu] - 6)), pos.z);
+    }
+
+    //Take string, split it, convert to int, then set unlocked list
+    private void ConvertData(List<int> array)
+    {
+        split = list.Split('_');
+        unlock = new int[split.Length - 1];
+        for (int i = 0; i < split.Length - 1; i++) {
+            if (int.TryParse(split[i], out int res)) unlock[i] = res;
+        }
+        array.Clear();
+        for (int i = 0; i < unlock.Length; i++) array.Insert(i, unlock[i]);
+    }
+
+    //Exit exe (Non mobile only)
     public void Quit()
     {
         Application.Quit();
         DeleteSaveData();
     }
 
+    //Clear all saved data
     public void DeleteSaveData()
     {
         PlayerPrefs.DeleteAll();
     }
 
-    public int GetSaveData(string Key)
+    //Return any saved int data, 0 otherwise
+    private int GetSaveData(string Key)
     {
         if (PlayerPrefs.HasKey(Key)) {
             return PlayerPrefs.GetInt(Key);
@@ -225,11 +343,24 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    //Return any saved string data, 0 otherwise
+    private string GetStringData(string Key)
+    {
+        if (PlayerPrefs.HasKey(Key)) {
+            return PlayerPrefs.GetString(Key);
+        } else {
+            PlayerPrefs.SetString(Key, "0_");
+            return "0_";
+        }
+    }
+
+    //Write input data to input Key
     public void SaveData(string Key, int Data)
     {
         PlayerPrefs.SetInt(Key, Data);
     }
 
+    //"Not enough cash" message lasts for 1.5sec
     private IEnumerator Wait()
     {
         yield return new WaitForSeconds(1.5f);

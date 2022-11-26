@@ -53,59 +53,9 @@ public class Line : MonoBehaviour
         mouseDown = Input.GetMouseButton(0);
         view = main.ScreenPointToRay(Input.mousePosition);
 
-        switch (script.mode) {
-            case 0:
-                White();
-                break;
-            case 1:
-                Grey();
-                break;
-            case 2:
-                Black();
-                break;
-            case 3:
-                Graydient();
-                break;
-            case 4:
-                Greydient();
-                break;
-            case 5:
-                Red();
-                break;
-            case 6:
-                Orange();
-                break;
-            case 7:
-                Yellow();
-                break;
-            case 8:
-                Green();
-                break;
-            case 9:
-                DarkGreen();
-                break;
-            case 10:
-                Cyan();
-                break;
-            case 11:
-                Blue();
-                break;
-            case 12:
-                Magenta();
-                break;
-            case 13:
-                Purple();
-                break;
-            case 14:
-                Rainbow();
-                break;
-            case 15:
-                offset += 10 * Time.deltaTime;
-                Disco(Mathf.RoundToInt(offset));
-                break;
-            default:
-                White();
-                break;
+        if (script.mode == 15) {
+            offset += 10 * Time.deltaTime;
+            Disco(Mathf.RoundToInt(offset));
         }
 
         //Get tap position and add it to a list
@@ -160,6 +110,63 @@ public class Line : MonoBehaviour
             drawn.BakeMesh(mesh, main, true);
             filters.mesh = mesh;
             collision.sharedMesh = mesh;
+        }
+    }
+
+    public void Design(int index)
+    {
+        switch (index) {
+            case 0:
+                White();
+                break;
+            case 1:
+                Grey();
+                break;
+            case 2:
+                Black();
+                break;
+            case 3:
+                Graydient();
+                break;
+            case 4:
+                Greydient();
+                break;
+            case 5:
+                Red();
+                break;
+            case 6:
+                Orange();
+                break;
+            case 7:
+                Yellow();
+                break;
+            case 8:
+                Green();
+                break;
+            case 9:
+                DarkGreen();
+                break;
+            case 10:
+                Cyan();
+                break;
+            case 11:
+                Blue();
+                break;
+            case 12:
+                Magenta();
+                break;
+            case 13:
+                Purple();
+                break;
+            case 14:
+                Rainbow();
+                break;
+            case 15:
+                //Disco in Update
+                break;
+            default:
+                White();
+                break;
         }
     }
 
