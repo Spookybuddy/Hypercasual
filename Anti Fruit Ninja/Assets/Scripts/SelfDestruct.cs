@@ -11,7 +11,7 @@ public class SelfDestruct : MonoBehaviour
 
     IEnumerator Implode()
     {
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.75f);
         Destroy(gameObject);
     }
 }

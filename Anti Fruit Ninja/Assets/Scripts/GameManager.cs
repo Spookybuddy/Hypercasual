@@ -88,9 +88,7 @@ public class GameManager : MonoBehaviour
         unlocks.Insert(0, unlocked);
         unlocks.Insert(1, unlocked2);
         unlocks.Insert(2, unlocked3);
-        strings[0] = draws;
-        strings[1] = basket;
-        strings[2] = area;
+        Set();
 
         //Start on main
         mained = true;
@@ -98,7 +96,6 @@ public class GameManager : MonoBehaviour
         canDraw = false;
         shopping = false;
         maxObjects = 0;
-        currentMenu = 0;
         MR = trophy.GetComponent<Renderer>();
 
         //Update shop text
@@ -108,12 +105,11 @@ public class GameManager : MonoBehaviour
         ConvertData(unlocked2);
         list = area;
         ConvertData(unlocked3);
-        for (int i = 0; i < DESIGNS[0]; i++) if (unlocked.Contains(i)) SetText(i);
-        for (int i = 0; i < DESIGNS[1]; i++) if (unlocked2.Contains(i)) SetText(i);
-        for (int i = 0; i < DESIGNS[2]; i++) if (unlocked3.Contains(i)) SetText(i);
-
-        BG.Mat(ground);
-        FT.Swap(food);
+        for (int i = 0; i < DESIGNS.Length; i++) {
+            currentMenu = i;
+            for (int j = 0; j < DESIGNS[i]; j++) if (unlocks[i].Contains(j)) SetText(j);
+        }
+        currentMenu = 0;
     }
 
     void Update()
@@ -200,11 +196,15 @@ public class GameManager : MonoBehaviour
         foreach(GameObject menu in shopScroll) menu.transform.localPosition = Vector3.zero;
         shopping = false;
 
-        //Save data
+        //Save data for: Record, $, Current Line, Fruit, BG, all purchased Lines, Fruit & BGs
         SaveData("Record", best);
         SaveData("Money", currency);
         SaveData("Design", mode);
+        SaveData("Defend", food);
+        SaveData("Picture", ground);
         PlayerPrefs.SetString("Inventory", draws);
+        PlayerPrefs.SetString("Fruits", basket);
+        PlayerPrefs.SetString("Background", area);
     }
 
     //Gameplay
@@ -250,7 +250,7 @@ public class GameManager : MonoBehaviour
             //Buy: Set current design, then add new purchase to save data and list
             Change((int)price.x);
             currency -= (int)price.y;
-            list = strings[currentMenu] + (((int)price.x).ToString() + "_");
+            list = strings[currentMenu];
             ConvertData(unlocks[currentMenu]);
             SetText((int)price.x);
         }
@@ -263,17 +263,29 @@ public class GameManager : MonoBehaviour
         switch (currentMenu) {
             case 0:
                 mode = val;
+                draws += val.ToString() + "_";
                 break;
             case 1:
                 food = val;
+                basket += val.ToString() + "_";
                 break;
             case 2:
                 ground = val;
+                area += val.ToString() + "_";
                 break;
         }
+        Set();
+    }
+
+    //Sets all things to their values
+    private void Set()
+    {
         BG.Mat(ground);
         FT.Swap(food);
         LN.Design(mode);
+        strings[0] = draws;
+        strings[1] = basket;
+        strings[2] = area;
     }
 
     //Remove the price of designs already purchased

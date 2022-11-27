@@ -48,7 +48,7 @@ public class Objects : MonoBehaviour
 
     private IEnumerator waitFor()
     {
-        yield return new WaitForSeconds(0.5f);
+        yield return new WaitForSeconds(0.75f);
         rig.useGravity = true;
         rig.AddForce(new Vector3(-1.25f * spawn.x, -1.33333f * spawn.y + 3, 0), ForceMode.Impulse);
         rig.AddTorque(Vector3.forward * 4 * Mathf.Sign(Random.Range(-1, 1)), ForceMode.Impulse);
