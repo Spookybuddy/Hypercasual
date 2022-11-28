@@ -26,8 +26,9 @@ public class GameManager : MonoBehaviour
     private Renderer MR;
 
     private int maxObjects;
-    public GameObject ball;
-    public GameObject exclaim;
+    public GameObject[] prefab1;
+    public GameObject[] prefab2;
+    public GameObject[,] prefabs;
     private List<Vector3> warnings = new List<Vector3>();
     private List<GameObject> actives = new List<GameObject>();
     public bool canDraw;
@@ -75,6 +76,8 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        prefabs = new GameObject[2, 2] { { prefab1[0], prefab1[1] }, { prefab2[0], prefab2[1] } };
+
         //Get any saved data
         best = GetSaveData("Record");
         currency = GetSaveData("Money");
@@ -147,11 +150,12 @@ public class GameManager : MonoBehaviour
 
         //Spawn new bomb when #bomb is below desired amount
         if (actives.Count < past && canDraw) {
+            int weighted = Mathf.FloorToInt(Random.Range(0, 7)/6);
             warnings.Insert(0, new Vector3(2.5f * Mathf.Sign(Random.Range(-1, 1)), Random.Range(-5, 5), 0));
             Vector3 outside = warnings[0] + new Vector3(warnings[0].x, 0, 0);
-            GameObject baller = Instantiate(ball, outside, Quaternion.identity) as GameObject;
+            GameObject baller = Instantiate(prefabs[weighted, 0], outside, Quaternion.identity) as GameObject;
             actives.Insert(0, baller);
-            Instantiate(exclaim, warnings[0], Quaternion.identity);
+            Instantiate(prefabs[weighted, 1], warnings[0], Quaternion.identity);
         }
 
         //Once bomb is gone, remove from lists to spawn new one

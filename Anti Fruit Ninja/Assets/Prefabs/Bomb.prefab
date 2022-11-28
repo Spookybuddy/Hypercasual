@@ -11,8 +11,9 @@ GameObject:
   - component: {fileID: 3286716517419240795}
   - component: {fileID: 4655469649890885894}
   - component: {fileID: 5977156944817176265}
+  - component: {fileID: 6853774970058540858}
   m_Layer: 0
-  m_Name: Bomb
+  m_Name: Model
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -28,7 +29,8 @@ Transform:
   m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
   m_LocalPosition: {x: -0, y: 0, z: 0}
   m_LocalScale: {x: 0.5, y: 0.5, z: 0.5}
-  m_Children: []
+  m_Children:
+  - {fileID: 2212229400517819772}
   m_Father: {fileID: 7254813555724442361}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
@@ -81,6 +83,20 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &6853774970058540858
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3535556764705410667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e7cad2af1f3f5240b4abe0a91194b43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  parent: {fileID: 8063016533847474264}
+  spd: 150
 --- !u!1 &8063016533847474243
 GameObject:
   m_ObjectHideFlags: 0
@@ -114,7 +130,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children:
   - {fileID: 3286716517419240795}
-  - {fileID: 2212229400517819772}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -185,10 +200,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9ce3f6d5ee4c1b64bbe7f068b2247b67, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  manager: {fileID: 0}
+  script: {fileID: 0}
   MR: {fileID: 5977156944817176265}
   rig: {fileID: 8063016533847474247}
   spawn: {x: 0, y: 0, z: 0}
+  goodBad: 0
+  rotateAxis: {x: 0, y: 1, z: 0}
 --- !u!1 &8840311754964726991
 GameObject:
   m_ObjectHideFlags: 0
@@ -214,12 +231,12 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8840311754964726991}
-  m_LocalRotation: {x: -0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 0.8, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 1.6000003}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
-  m_Father: {fileID: 7254813555724442361}
-  m_RootOrder: 1
+  m_Father: {fileID: 3286716517419240795}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: 0}
 --- !u!198 &4135122501903103086
 ParticleSystem:

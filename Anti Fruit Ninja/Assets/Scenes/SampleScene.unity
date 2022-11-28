@@ -19066,8 +19066,12 @@ MonoBehaviour:
   confirm: {fileID: 329531809}
   refusal: {fileID: 1368959666}
   trophy: {fileID: 45849150}
-  ball: {fileID: 8063016533847474243, guid: be1a7a780696dda40965cf91f934c9d6, type: 3}
-  exclaim: {fileID: 1998203833679374521, guid: 2396bca10bc81fa4e8f5abe459fa3b5a, type: 3}
+  prefab1:
+  - {fileID: 8063016533847474243, guid: be1a7a780696dda40965cf91f934c9d6, type: 3}
+  - {fileID: 1998203833679374521, guid: 2396bca10bc81fa4e8f5abe459fa3b5a, type: 3}
+  prefab2:
+  - {fileID: 5406041505603806166, guid: 3aec1e7ce5706a145b2c9c60a28646f6, type: 3}
+  - {fileID: 2618688699007324648, guid: 10cc69305d1c2f248962a378f91af425, type: 3}
   canDraw: 0
   canDoodle: 0
   BG: {fileID: 1044072722}

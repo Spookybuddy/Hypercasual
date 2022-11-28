@@ -4,8 +4,7 @@ using UnityEngine;
 
 public class Objects : MonoBehaviour
 {
-    public GameObject manager;
-    private GameManager script;
+    public GameManager script;
     public MeshRenderer MR;
     public Rigidbody rig;
 
@@ -14,10 +13,12 @@ public class Objects : MonoBehaviour
     private Vector3 storedVelo;
     private bool hasHit;
 
+    public bool goodBad;
+    public Vector3 rotateAxis;
+
     void Start()
     {
-        manager = GameObject.FindWithTag("GameController");
-        script = manager.GetComponent<GameManager>();
+        script = GameObject.FindWithTag("GameController").GetComponent<GameManager>();
         spawn = transform.position;
         hasHit = false;
         rig.useGravity = false;
@@ -41,9 +42,8 @@ public class Objects : MonoBehaviour
             paused = false;
         }
 
-        if (!MR.isVisible && Vector3.Distance(spawn, transform.position) > 10 && !paused) {
-            Destroy(gameObject);
-        }
+        //Out of sight and away from spawn location
+        if (!MR.isVisible && Vector3.Distance(spawn, transform.position) > 10 && !paused) Destroy(gameObject);
     }
 
     private IEnumerator waitFor()
@@ -51,14 +51,20 @@ public class Objects : MonoBehaviour
         yield return new WaitForSeconds(0.75f);
         rig.useGravity = true;
         rig.AddForce(new Vector3(-1.25f * spawn.x, -1.33333f * spawn.y + 3, 0), ForceMode.Impulse);
-        rig.AddTorque(Vector3.forward * 4 * Mathf.Sign(Random.Range(-1, 1)), ForceMode.Impulse);
     }
 
     void OnTriggerEnter(Collider collision)
     {
-        if (!hasHit && !collision.CompareTag("Finish")) {
-            script.points++;
-            hasHit = true;
+        if (goodBad) {
+            if (collision.CompareTag("Finish")) {
+                script.currency += 10;
+                Destroy(gameObject);
+            }
+        } else {
+            if (!hasHit && !goodBad) {
+                script.points++;
+                hasHit = true;
+            }
         }
     }
 }
