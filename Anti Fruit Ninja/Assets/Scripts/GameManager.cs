@@ -181,7 +181,7 @@ public class GameManager : MonoBehaviour
         paused = !onOff;
         difficultyTime = 0;
         trophy.transform.position = Vector3.zero;
-        trophy.transform.eulerAngles = Vector3.left * 90;
+        trophy.transform.eulerAngles = Vector3.zero;
         Rigidbody component = trophy.GetComponent<Rigidbody>();
         component.velocity = Vector3.zero;
         component.angularVelocity = Vector3.zero;
