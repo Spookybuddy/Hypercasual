@@ -222,3 +222,6 @@ MonoBehaviour:
   spawn: {x: 0, y: 0, z: 0}
   goodBad: 1
   rotateAxis: {x: 0, y: 0, z: 1}
+  alertSound: {fileID: 8300000, guid: 60c96565c9aa4cd4a9732be359a02eae, type: 3}
+  whistleSound: {fileID: 8300000, guid: c2848b9c6575c5642b4f65ec188cdf3a, type: 3}
+  hitSound: {fileID: 8300000, guid: cc0be137304ecad4cad846d64a44dccc, type: 3}

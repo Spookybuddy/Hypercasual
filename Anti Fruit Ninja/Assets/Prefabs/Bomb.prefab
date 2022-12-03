@@ -206,6 +206,9 @@ MonoBehaviour:
   spawn: {x: 0, y: 0, z: 0}
   goodBad: 0
   rotateAxis: {x: 0, y: 1, z: 0}
+  alertSound: {fileID: 8300000, guid: 60c96565c9aa4cd4a9732be359a02eae, type: 3}
+  whistleSound: {fileID: 8300000, guid: fdca2e3d66bfff940a7dbf02affe589b, type: 3}
+  hitSound: {fileID: 8300000, guid: 32f84d29900527e4685df5ceddb8fa0e, type: 3}
 --- !u!1 &8840311754964726991
 GameObject:
   m_ObjectHideFlags: 0

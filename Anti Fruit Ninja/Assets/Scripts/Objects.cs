@@ -15,6 +15,9 @@ public class Objects : MonoBehaviour
 
     public bool goodBad;
     public Vector3 rotateAxis;
+    public AudioClip alertSound;
+    public AudioClip whistleSound;
+    public AudioClip hitSound;
 
     void Start()
     {
@@ -22,6 +25,7 @@ public class Objects : MonoBehaviour
         spawn = transform.position;
         hasHit = false;
         rig.useGravity = false;
+        script.Play(alertSound, 0.5f);
         StartCoroutine(waitFor());
     }
 
@@ -51,6 +55,7 @@ public class Objects : MonoBehaviour
         yield return new WaitForSeconds(0.75f);
         rig.useGravity = true;
         rig.AddForce(new Vector3(-1.25f * spawn.x, -1.33333f * spawn.y + 3, 0), ForceMode.Impulse);
+        script.Play(whistleSound, 0.3f);
     }
 
     void OnTriggerEnter(Collider collision)
@@ -58,11 +63,13 @@ public class Objects : MonoBehaviour
         if (goodBad) {
             if (collision.CompareTag("Finish")) {
                 script.currency += 10;
+                script.Play(hitSound, 0.3f);
                 Destroy(gameObject);
             }
         } else {
-            if (!hasHit && !goodBad) {
+            if (!hasHit && !collision.CompareTag("Respawn")) {
                 script.points++;
+                script.Play(hitSound, 0.3f);
                 hasHit = true;
             }
         }

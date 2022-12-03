@@ -23,6 +23,12 @@ public class GameManager : MonoBehaviour
     public GameObject confirm;
     public GameObject refusal;
     public GameObject trophy;
+    public AudioSource MusicM, MusicG, SFX;
+    public AudioClip loseTwang;
+    public AudioClip buyFail;
+    public AudioClip buySucc;
+    public AudioClip menuBoop;
+    public AudioClip menuBack;
     private Renderer MR;
 
     private int maxObjects;
@@ -113,6 +119,9 @@ public class GameManager : MonoBehaviour
             for (int j = 0; j < DESIGNS[i]; j++) if (unlocks[i].Contains(j)) SetText(j);
         }
         currentMenu = 0;
+
+        MusicG.Stop();
+        MusicM.Play();
     }
 
     void Update()
@@ -145,7 +154,7 @@ public class GameManager : MonoBehaviour
         record.text = "Record: " + best.ToString();
         wallet.text = "$" + currency.ToString();
 
-        //Orange knocked away: lose
+        //Fruit knocked away: lose
         if (!MR.isVisible && !mained) Over();
 
         //Spawn new bomb when #bomb is below desired amount
@@ -164,6 +173,20 @@ public class GameManager : MonoBehaviour
                 warnings.RemoveAt(i);
                 actives.RemoveAt(i);
             }
+        }
+
+        //Music
+        if (!MusicG.isPlaying && canDraw) {
+            MusicM.Stop();
+            MusicG.Play();
+        }
+        if (!MusicM.isPlaying && canDoodle) {
+            MusicG.Stop();
+            MusicM.Play();
+        }
+        if (MusicG.isPlaying && !MR.isVisible) {
+            MusicG.Stop();
+            Play(loseTwang, 0.3f);
         }
     }
 
@@ -193,22 +216,12 @@ public class GameManager : MonoBehaviour
         }
         currency += points;
         points = 0;
-        GameObject[] clear = GameObject.FindGameObjectsWithTag("Respawn");
-        foreach (GameObject i in clear) {
-            Destroy(i);
-        }
+        Erase();
         foreach(GameObject menu in shopScroll) menu.transform.localPosition = Vector3.zero;
         shopping = false;
 
         //Save data for: Record, $, Current Line, Fruit, BG, all purchased Lines, Fruit & BGs
-        SaveData("Record", best);
-        SaveData("Money", currency);
-        SaveData("Design", mode);
-        SaveData("Defend", food);
-        SaveData("Picture", ground);
-        PlayerPrefs.SetString("Inventory", draws);
-        PlayerPrefs.SetString("Fruits", basket);
-        PlayerPrefs.SetString("Background", area);
+        RecordSaveData();
     }
 
     //Gameplay
@@ -225,6 +238,20 @@ public class GameManager : MonoBehaviour
         canDraw = false;
         paused = false;
         mained = false;
+        Erase();
+    }
+
+    //Play sound effect
+    public void Play(AudioClip clip, float volume)
+    {
+        SFX.PlayOneShot(clip, volume);
+    }
+
+    //Remove all bombs
+    private void Erase()
+    {
+        GameObject[] clear = GameObject.FindGameObjectsWithTag("Respawn");
+        foreach (GameObject obj in clear) Destroy(obj);
     }
 
     //Function takes NXXX, with N being design number & XXX being cost
@@ -239,6 +266,7 @@ public class GameManager : MonoBehaviour
                     confirming = true;
                 } else {
                     rejecting = true;
+                    Play(buyFail, 0.6f);
                     StartCoroutine(Wait());
                 }
             } else {
@@ -257,6 +285,8 @@ public class GameManager : MonoBehaviour
             list = strings[currentMenu];
             ConvertData(unlocks[currentMenu]);
             SetText((int)price.x);
+            RecordSaveData();
+            Play(buySucc, 0.4f);
         }
         confirming = false;
     }
@@ -340,6 +370,19 @@ public class GameManager : MonoBehaviour
     {
         Application.Quit();
         DeleteSaveData();
+    }
+
+    //Record all save data
+    public void RecordSaveData()
+    {
+        SaveData("Record", best);
+        SaveData("Money", currency);
+        SaveData("Design", mode);
+        SaveData("Defend", food);
+        SaveData("Picture", ground);
+        PlayerPrefs.SetString("Inventory", draws);
+        PlayerPrefs.SetString("Fruits", basket);
+        PlayerPrefs.SetString("Background", area);
     }
 
     //Clear all saved data
