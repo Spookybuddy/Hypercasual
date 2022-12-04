@@ -4,14 +4,13 @@ using UnityEngine;
 
 public class SelfDestruct : MonoBehaviour
 {
-    void Start()
-    {
-        StartCoroutine(Implode());
-    }
+    public float timer;
+
+    void Start() { StartCoroutine(Implode()); }
 
     IEnumerator Implode()
     {
-        yield return new WaitForSeconds(0.75f);
+        yield return new WaitForSeconds(timer);
         Destroy(gameObject);
     }
 }

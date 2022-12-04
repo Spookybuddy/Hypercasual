@@ -40,7 +40,7 @@ public class Objects : MonoBehaviour
                 paused = true;
             }
             //Exit pause, set velo to recorded
-        } else if (script.canDraw) {
+        } else if (script.canDraw && script.countdown == 0) {
             rig.useGravity = true;
             rig.velocity = storedVelo;
             paused = false;

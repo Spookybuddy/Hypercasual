@@ -6,6 +6,7 @@ using TMPro;
 public class GameManager : MonoBehaviour
 {
     //menus
+    public GameObject rewardMenu;
     public GameObject pauseMenu;
     public GameObject mainMenu;
     public GameObject gameMenu;
@@ -13,6 +14,7 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI total;
     public TextMeshProUGUI record;
     public TextMeshProUGUI wallet;
+    public TextMeshProUGUI gamedown;
     public GameObject gameOver;
     public GameObject shopMenu;
     public GameObject shopBase;
@@ -23,6 +25,8 @@ public class GameManager : MonoBehaviour
     public GameObject confirm;
     public GameObject refusal;
     public GameObject trophy;
+    public GameObject treasureChest;
+    public GameObject chest;
     public AudioSource MusicM, MusicG, SFX;
     public AudioClip loseTwang;
     public AudioClip buyFail;
@@ -47,6 +51,8 @@ public class GameManager : MonoBehaviour
     private bool fruit;
     private bool confirming;
     private bool rejecting;
+    private bool tutoring;
+    private bool rewarding;
     private Vector2 price;
 
     public Backgrounds BG;
@@ -57,9 +63,13 @@ public class GameManager : MonoBehaviour
 
     private float difficultyTime;
     private int past;
+    public int countdown;
     public int points;
 
     //Save data
+    public int month;
+    public int day;
+    public int chain;
     private int best;
     public int currency;
     private List<int> unlocked = new List<int>();
@@ -90,6 +100,12 @@ public class GameManager : MonoBehaviour
         mode = GetSaveData("Design");
         food = GetSaveData("Defend");
         ground = GetSaveData("Picture");
+        day = GetSaveData("LastLogin");
+        day = (day == 0 ? System.DateTime.Now.Day - 1 : day);
+        chain = GetSaveData("LoginChain");
+        month = GetSaveData("LastMonth");
+        month = (month == 0 ? System.DateTime.Now.Month : month);
+
         draws = GetStringData("Inventory");
         basket = GetStringData("Fruits");
         area = GetStringData("Background");
@@ -99,11 +115,37 @@ public class GameManager : MonoBehaviour
         unlocks.Insert(2, unlocked3);
         Set();
 
+        //Daily rewards
+        if (System.DateTime.Now.Day != day) {
+            //If the last login was on the last day of the month and the current day is the 1st, give daily login
+            bool first = (day == System.DateTime.DaysInMonth(System.DateTime.Now.Year, month) && System.DateTime.Now.Day == 1);
+            bool next = (System.DateTime.Now.Day == day + 1);
+
+            //Missed consecutive day
+            if (!first && !next) {
+                chain = 1;
+                Rewards();
+                Debug.Log("Chain broken");
+            }
+
+            //Consecutive day
+            if (first || next) {
+                day = System.DateTime.Now.Day;
+                month = System.DateTime.Now.Month;
+                chain++;
+                Rewards();
+            }
+
+            rewarding = true;
+            chest = Instantiate(treasureChest, new Vector3(0, 8, -3), Quaternion.identity) as GameObject;
+        }
+
         //Start on main
         mained = true;
         paused = false;
         canDraw = false;
         shopping = false;
+        tutoring = true;
         maxObjects = 0;
         MR = trophy.GetComponent<Renderer>();
 
@@ -127,7 +169,8 @@ public class GameManager : MonoBehaviour
     void Update()
     {
         //Show desired menu
-        mainMenu.SetActive(mained);
+        rewardMenu.SetActive(rewarding);
+        mainMenu.SetActive(mained && !rewarding);
         pauseMenu.SetActive(paused);
         gameMenu.SetActive(canDraw);
         shopMenu.SetActive(shopping);
@@ -145,7 +188,7 @@ public class GameManager : MonoBehaviour
         maxObjects = canDraw ? past : 0;
 
         //Add timer, max objects based on time passed
-        if (canDraw) difficultyTime += Time.deltaTime;
+        if (canDraw && countdown == 0) difficultyTime += Time.deltaTime;
         past = Mathf.FloorToInt(difficultyTime / 20) + 1;
 
         //Update texts
@@ -153,12 +196,14 @@ public class GameManager : MonoBehaviour
         total.text = "Final Score:\n" + points.ToString();
         record.text = "Record: " + best.ToString();
         wallet.text = "$" + currency.ToString();
+        if (countdown != 0) gamedown.text = countdown.ToString();
+        else gamedown.text = " ";
 
         //Fruit knocked away: lose
         if (!MR.isVisible && !mained) Over();
 
         //Spawn new bomb when #bomb is below desired amount
-        if (actives.Count < past && canDraw) {
+        if (actives.Count < past && canDraw && countdown == 0) {
             int weighted = Mathf.FloorToInt(Random.Range(0, 7)/6);
             warnings.Insert(0, new Vector3(2.5f * Mathf.Sign(Random.Range(-1, 1)), Random.Range(-5, 5), 0));
             Vector3 outside = warnings[0] + new Vector3(warnings[0].x, 0, 0);
@@ -195,6 +240,10 @@ public class GameManager : MonoBehaviour
     {
         paused = onOff;
         canDraw = !onOff;
+        if (!onOff) {
+            countdown = 3;
+            StartCoroutine(Delay());
+        }
     }
 
     //Main menu T/F, reset timer, orange, add points, clear bombs
@@ -227,7 +276,8 @@ public class GameManager : MonoBehaviour
     //Gameplay
     public void Game()
     {
-        canDraw = true;
+        countdown = 3;
+        StartCoroutine(Delay());
         paused = false;
         mained = false;
     }
@@ -245,6 +295,23 @@ public class GameManager : MonoBehaviour
     public void Play(AudioClip clip, float volume)
     {
         SFX.PlayOneShot(clip, volume);
+    }
+
+    //Chain rewards
+    private void Rewards()
+    {
+        currency += chain * 5;
+        SaveData("LastLogin", day);
+        SaveData("LastMonth", month);
+        SaveData("LoginChain", chain);
+        SaveData("Money", currency);
+    }
+
+    //Accept the daily rewards
+    public void Return()
+    {
+        Destroy(chest);
+        rewarding = false;
     }
 
     //Remove all bombs
@@ -369,7 +436,6 @@ public class GameManager : MonoBehaviour
     public void Quit()
     {
         Application.Quit();
-        DeleteSaveData();
     }
 
     //Record all save data
@@ -380,6 +446,8 @@ public class GameManager : MonoBehaviour
         SaveData("Design", mode);
         SaveData("Defend", food);
         SaveData("Picture", ground);
+        SaveData("LastLogin", day);
+        SaveData("LoginChain", chain);
         PlayerPrefs.SetString("Inventory", draws);
         PlayerPrefs.SetString("Fruits", basket);
         PlayerPrefs.SetString("Background", area);
@@ -419,10 +487,18 @@ public class GameManager : MonoBehaviour
         PlayerPrefs.SetInt(Key, Data);
     }
 
-    //"Not enough cash" message lasts for 1.5sec
+    //"Not enough cash" message lasts for 1.25sec
     private IEnumerator Wait()
     {
-        yield return new WaitForSeconds(1.5f);
+        yield return new WaitForSeconds(1.25f);
         rejecting = false;
+    }
+
+    //Game has a countdown before starting
+    private IEnumerator Delay()
+    {
+        yield return new WaitForSeconds(1);
+        countdown--;
+        if (countdown > 0) StartCoroutine(Delay());
     }
 }
