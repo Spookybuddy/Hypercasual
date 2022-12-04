@@ -20337,6 +20337,8 @@ MonoBehaviour:
   - {fileID: 2618688699007324648, guid: 10cc69305d1c2f248962a378f91af425, type: 3}
   canDraw: 0
   canDoodle: 0
+  mained: 0
+  rewarding: 0
   BG: {fileID: 1044072722}
   FT: {fileID: 45849156}
   LN: {fileID: 2137998206}
@@ -23097,7 +23099,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1757101125}
         m_TargetAssemblyTypeName: GameManager, Assembly-CSharp
-        m_MethodName: Return
+        m_MethodName: Accept
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}

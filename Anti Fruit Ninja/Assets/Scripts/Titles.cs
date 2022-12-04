@@ -9,9 +9,7 @@ public class Titles : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetMouseButton(0) && previous == null) {
-            StartCoroutine(load());
-        }
+        if (Input.GetMouseButton(0) && previous == null) StartCoroutine(load());
     }
 
     private IEnumerator load()

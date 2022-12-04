@@ -43,7 +43,7 @@ public class GameManager : MonoBehaviour
     private List<GameObject> actives = new List<GameObject>();
     public bool canDraw;
     public bool canDoodle;
-    private bool mained;
+    public bool mained;
     private bool paused;
     private bool shopping;
     private bool lines;
@@ -52,7 +52,7 @@ public class GameManager : MonoBehaviour
     private bool confirming;
     private bool rejecting;
     private bool tutoring;
-    private bool rewarding;
+    public bool rewarding;
     private Vector2 price;
 
     public Backgrounds BG;
@@ -138,6 +138,7 @@ public class GameManager : MonoBehaviour
 
             rewarding = true;
             chest = Instantiate(treasureChest, new Vector3(0, 8, -3), Quaternion.identity) as GameObject;
+            Debug.Log("Daily Reward");
         }
 
         //Start on main
@@ -308,9 +309,10 @@ public class GameManager : MonoBehaviour
     }
 
     //Accept the daily rewards
-    public void Return()
+    public void Accept()
     {
         Destroy(chest);
+        mained = true;
         rewarding = false;
     }
 
