@@ -7,6 +7,7 @@ public class RewardChest : MonoBehaviour
     private GameManager script;
     public Animation anime;
     public ParticleSystem particles;
+    private bool played;
 
     void Start() { script = GameObject.FindWithTag("GameController").GetComponent<GameManager>(); }
 

@@ -15,6 +15,7 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI record;
     public TextMeshProUGUI wallet;
     public TextMeshProUGUI gamedown;
+    public TextMeshProUGUI loginBonus;
     public GameObject gameOver;
     public GameObject shopMenu;
     public GameObject shopBase;
@@ -26,7 +27,9 @@ public class GameManager : MonoBehaviour
     public GameObject refusal;
     public GameObject trophy;
     public GameObject treasureChest;
-    public GameObject chest;
+    public GameObject risingCash;
+    public GameObject delayedButton;
+
     public AudioSource MusicM, MusicG, SFX;
     public AudioClip loseTwang;
     public AudioClip buyFail;
@@ -36,23 +39,15 @@ public class GameManager : MonoBehaviour
     private Renderer MR;
 
     private int maxObjects;
+    private GameObject chest;
     public GameObject[] prefab1;
     public GameObject[] prefab2;
-    public GameObject[,] prefabs;
+    private GameObject[,] prefabs;
     private List<Vector3> warnings = new List<Vector3>();
     private List<GameObject> actives = new List<GameObject>();
     public bool canDraw;
     public bool canDoodle;
-    public bool mained;
-    private bool paused;
-    private bool shopping;
-    private bool lines;
-    private bool backs;
-    private bool fruit;
-    private bool confirming;
-    private bool rejecting;
-    private bool tutoring;
-    public bool rewarding;
+    private bool mained, paused, shopping, lines, backs, fruit, confirming, rejecting, tutoring, rewarding;
     private Vector2 price;
 
     public Backgrounds BG;
@@ -67,8 +62,8 @@ public class GameManager : MonoBehaviour
     public int points;
 
     //Save data
-    public int month;
-    public int day;
+    private int month;
+    private int day;
     public int chain;
     private int best;
     public int currency;
@@ -115,6 +110,32 @@ public class GameManager : MonoBehaviour
         unlocks.Insert(2, unlocked3);
         Set();
 
+        //Start on main
+        mained = true;
+        paused = false;
+        canDraw = false;
+        shopping = false;
+        tutoring = true;
+        maxObjects = 0;
+        MR = trophy.GetComponent<Renderer>();
+
+        //Update shop text
+        list = draws;
+        ConvertData(unlocked);
+        list = basket;
+        ConvertData(unlocked2);
+        list = area;
+        ConvertData(unlocked3);
+        for (int i = 0; i < DESIGNS.Length; i++)
+        {
+            currentMenu = i;
+            for (int j = 0; j < DESIGNS[i]; j++) if (unlocks[i].Contains(j)) SetText(j);
+        }
+        currentMenu = 0;
+
+        MusicG.Stop();
+        MusicM.Play();
+
         //Daily rewards
         if (System.DateTime.Now.Day != day) {
             //If the last login was on the last day of the month and the current day is the 1st, give daily login
@@ -137,34 +158,14 @@ public class GameManager : MonoBehaviour
             }
 
             rewarding = true;
+            risingCash.transform.localPosition = Vector3.up * -300;
+            risingCash.SetActive(false);
+            delayedButton.SetActive(false);
             chest = Instantiate(treasureChest, new Vector3(0, 8, -3), Quaternion.identity) as GameObject;
-            Debug.Log("Daily Reward");
+            StartCoroutine(Halt(5.5f, risingCash));
+            StartCoroutine(Halt(7, delayedButton));
+            Debug.Log("Login Bonus");
         }
-
-        //Start on main
-        mained = true;
-        paused = false;
-        canDraw = false;
-        shopping = false;
-        tutoring = true;
-        maxObjects = 0;
-        MR = trophy.GetComponent<Renderer>();
-
-        //Update shop text
-        list = draws;
-        ConvertData(unlocked);
-        list = basket;
-        ConvertData(unlocked2);
-        list = area;
-        ConvertData(unlocked3);
-        for (int i = 0; i < DESIGNS.Length; i++) {
-            currentMenu = i;
-            for (int j = 0; j < DESIGNS[i]; j++) if (unlocks[i].Contains(j)) SetText(j);
-        }
-        currentMenu = 0;
-
-        MusicG.Stop();
-        MusicM.Play();
     }
 
     void Update()
@@ -234,6 +235,12 @@ public class GameManager : MonoBehaviour
             MusicG.Stop();
             Play(loseTwang, 0.3f);
         }
+
+        //Raise text
+        Transform cashForm = risingCash.transform;
+        if (risingCash.activeInHierarchy && cashForm.localPosition.y < 0.1f) {
+            cashForm.localPosition = Vector3.MoveTowards(cashForm.localPosition, Vector3.zero, Time.deltaTime * -cashForm.localPosition.y * 1.5f);
+        }
     }
 
     //Open pause menu, halt gameplay
@@ -277,10 +284,12 @@ public class GameManager : MonoBehaviour
     //Gameplay
     public void Game()
     {
-        countdown = 3;
-        StartCoroutine(Delay());
-        paused = false;
-        mained = false;
+        if (!rewarding && !shopping && mained) {
+            countdown = 3;
+            StartCoroutine(Delay());
+            paused = false;
+            mained = false;
+        }
     }
 
     //Gameover
@@ -302,6 +311,8 @@ public class GameManager : MonoBehaviour
     private void Rewards()
     {
         currency += chain * 5;
+        wallet.gameObject.SetActive(false);
+        loginBonus.text = "$" + (chain * 5).ToString();
         SaveData("LastLogin", day);
         SaveData("LastMonth", month);
         SaveData("LoginChain", chain);
@@ -311,6 +322,7 @@ public class GameManager : MonoBehaviour
     //Accept the daily rewards
     public void Accept()
     {
+        wallet.gameObject.SetActive(true);
         Destroy(chest);
         mained = true;
         rewarding = false;
@@ -502,5 +514,11 @@ public class GameManager : MonoBehaviour
         yield return new WaitForSeconds(1);
         countdown--;
         if (countdown > 0) StartCoroutine(Delay());
+    }
+
+    private IEnumerator Halt(float time, GameObject menu)
+    {
+        yield return new WaitForSeconds(time);
+        menu.SetActive(true);
     }
 }

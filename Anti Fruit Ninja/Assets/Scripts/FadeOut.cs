@@ -5,7 +5,7 @@ using UnityEngine;
 public class FadeOut : MonoBehaviour
 {
     private bool outIn;
-    private float countdown;
+    public float countdown;
     private bool speedUp;
     public float timer;
     public Material mat;
@@ -22,6 +22,6 @@ public class FadeOut : MonoBehaviour
         }
         mat.SetColor("_Color", new Color(1, 1, 1, Mathf.Clamp01(countdown / (timer - 1))));
         rend.material = mat;
-        if (countdown < -0.5f) Destroy(gameObject);
+        if (countdown < -0.75f) Destroy(gameObject);
     }
 }
