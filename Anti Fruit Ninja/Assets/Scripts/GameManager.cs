@@ -115,7 +115,7 @@ public class GameManager : MonoBehaviour
         paused = false;
         canDraw = false;
         shopping = false;
-        tutoring = true;
+        //tutoring = true;
         maxObjects = 0;
         MR = trophy.GetComponent<Renderer>();
 
@@ -166,23 +166,14 @@ public class GameManager : MonoBehaviour
             StartCoroutine(Halt(7, delayedButton));
             Debug.Log("Login Bonus");
         }
+
+        ShowMenus();
     }
 
     void Update()
     {
-        //Show desired menu
-        rewardMenu.SetActive(rewarding);
-        mainMenu.SetActive(mained && !rewarding);
-        pauseMenu.SetActive(paused);
-        gameMenu.SetActive(canDraw);
-        shopMenu.SetActive(shopping);
-        shopBase.SetActive(!(lines || fruit || backs));
-        shopLine.SetActive(lines);
-        shopFruit.SetActive(fruit);
-        shopBack.SetActive(backs);
-        confirm.SetActive(confirming);
-        refusal.SetActive(rejecting);
-        gameOver.SetActive((!MR.isVisible && !mained));
+        ShowMenus();
+        Debug.Log(rewarding);
 
         //Bools based on what menus are active
         canDraw = !(paused || mained || shopping);
@@ -279,6 +270,23 @@ public class GameManager : MonoBehaviour
 
         //Save data for: Record, $, Current Line, Fruit, BG, all purchased Lines, Fruit & BGs
         RecordSaveData();
+    }
+
+    //Show desired menu
+    private void ShowMenus()
+    {
+        rewardMenu.SetActive(rewarding);
+        mainMenu.SetActive(mained && !rewarding);
+        pauseMenu.SetActive(paused);
+        gameMenu.SetActive(canDraw);
+        shopMenu.SetActive(shopping);
+        shopBase.SetActive(!(lines || fruit || backs));
+        shopLine.SetActive(lines);
+        shopFruit.SetActive(fruit);
+        shopBack.SetActive(backs);
+        confirm.SetActive(confirming);
+        refusal.SetActive(rejecting);
+        gameOver.SetActive((!MR.isVisible && !mained));
     }
 
     //Gameplay
