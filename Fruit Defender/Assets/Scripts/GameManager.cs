@@ -25,7 +25,7 @@ public class GameManager : MonoBehaviour
     public Fruits FT;
     public Line LN;
     public int[] DESIGNS;
-    private float difficultyTime;
+    private float difficultyTime, scrollDis;
     public int countdown, points;
 
     //Save data
@@ -47,7 +47,7 @@ public class GameManager : MonoBehaviour
     {
         //Screen resolution
         ratio.text = Screen.width.ToString() + " : " + Screen.height.ToString();
-        //Screen.SetResolution(1280, 720, false);
+        scrollDis = Mathf.Clamp(Screen.height / 10, 120, 300);
     }
 
     void Start()
@@ -83,6 +83,7 @@ public class GameManager : MonoBehaviour
         //tutoring = true;
         maxObjects = 0;
         MR = trophy.GetComponent<Renderer>();
+        trophy.SetActive(false);
         wallet.gameObject.SetActive(false);
 
         //Update shop text
@@ -105,20 +106,17 @@ public class GameManager : MonoBehaviour
         if (System.DateTime.Now.Day != day) {
             //If the last login was on the last day of the month and the current day is the 1st, give daily login
             bool first = (day == System.DateTime.DaysInMonth(System.DateTime.Now.Year, month) && System.DateTime.Now.Day == 1);
-            bool next = (System.DateTime.Now.Day == day + 1);
 
-            //Missed consecutive day
-            if (!first && !next) {
-                chain = 1;
-            } else {
-                day = System.DateTime.Now.Day;
-                month = System.DateTime.Now.Month;
-                chain++;
-            }
+            //Reset chain if missed consecutive day, otherwise increase chain
+            if (!first && !(System.DateTime.Now.Day == day + 1)) chain = 1;
+            else chain++;
 
+            //Record date as last login, trigger reward animation
+            day = System.DateTime.Now.Day;
+            month = System.DateTime.Now.Month;
             Rewards();
             rewarding = true;
-            arise.transform.localPosition = Vector3.up * -300;
+            arise.transform.localPosition = new Vector3(0, -500, -2000);
             arise.SetActive(false);
             recieve.SetActive(false);
         }
@@ -160,7 +158,7 @@ public class GameManager : MonoBehaviour
         else gamedown.text = " ";
 
         //Fruit knocked away: lose
-        if (!MR.isVisible && !mained) Over();
+        if (!MR.isVisible && !mained && !rewarding && !shopping) Over();
 
         //Spawn new bomb when #bomb is below desired amount
         if (actives.Count < past && canDraw && countdown == 0) {
@@ -197,18 +195,161 @@ public class GameManager : MonoBehaviour
         //Raise text
         Transform cashForm = arise.transform;
         if (arise.activeInHierarchy && cashForm.localPosition.y < 0.1f) {
-            cashForm.localPosition = Vector3.MoveTowards(cashForm.localPosition, Vector3.zero, Time.deltaTime * -cashForm.localPosition.y * 1.5f);
+            cashForm.localPosition = new Vector3(0, Mathf.MoveTowards(cashForm.localPosition.y, 0, Time.deltaTime * -cashForm.localPosition.y * 1.5f), -2000);
         }
     }
 
-    //Open pause menu, halt gameplay
-    public void Pause(bool onOff)
+    //--------------------------------------------------------------------------------------------- GAME FUNCTIONS
+    //Change desired value 
+    private void Change(int val)
     {
-        paused = onOff;
-        canDraw = !onOff;
-        if (!onOff) {
-            countdown = 1;
+        switch (currentMenu) {
+            case 0:
+                mode = val;
+                draws += val.ToString() + "_";
+                break;
+            case 1:
+                food = val;
+                basket += val.ToString() + "_";
+                break;
+            case 2:
+                ground = val;
+                area += val.ToString() + "_";
+                break;
+        }
+        Set();
+    }
+
+    //Take string, split it, convert to int, then set unlocked list
+    private void ConvertData(List<int> array)
+    {
+        split = list.Split('_');
+        unlock = new int[split.Length - 1];
+        for (int i = 0; i < split.Length - 1; i++) {
+            if (int.TryParse(split[i], out int res)) unlock[i] = res;
+        }
+        array.Clear();
+        for (int i = 0; i < unlock.Length; i++) array.Insert(i, unlock[i]);
+    }
+
+    //Remove all bombs
+    private void Erase()
+    {
+        GameObject[] clear = GameObject.FindGameObjectsWithTag("Respawn");
+        foreach (GameObject obj in clear) Destroy(obj);
+    }
+
+    //Pause the game if the app is suspended midgame
+    private void OnApplicationPause(bool status)
+    {
+        if (canDraw && status) Pause(true);
+    }
+
+    //Play sound effect
+    public void Play(AudioClip clip, float volume)
+    {
+        SFX.PlayOneShot(clip, volume);
+    }
+
+    //Exit exe (Non mobile only)
+    public void Quit()
+    {
+        Application.Quit();
+    }
+
+    //Chain rewards
+    private void Rewards()
+    {
+        currency += chain * 5;
+        loginBonus.text = "$" + (chain * 5).ToString();
+        SaveData("LastLogin", day);
+        SaveData("LastMonth", month);
+        SaveData("LoginChain", chain);
+        SaveData("Money", currency);
+    }
+
+    //Move shop menu with swipe: 1/10th screen height
+    public void Scroll(float move)
+    {
+        Vector3 pos = shopScroll[currentMenu].transform.localPosition;
+        shopScroll[currentMenu].transform.localPosition = new Vector3(pos.x, Mathf.Clamp(pos.y + (scrollDis * move), 0, 300 * (DESIGNS[currentMenu] - 6)), pos.z);
+    }
+
+    //Sets all things to their values
+    private void Set()
+    {
+        BG.Mat(ground);
+        FT.Swap(food);
+        LN.Design(mode);
+        strings[0] = draws;
+        strings[1] = basket;
+        strings[2] = area;
+    }
+
+    //Remove the price of designs already purchased
+    public void SetText(int ID)
+    {
+        shopScroll[currentMenu].transform.GetChild(ID).GetChild(1).GetComponent<TextMeshProUGUI>().text = " ";
+    }
+
+    //Show desired menu
+    private void ShowMenus()
+    {
+        trophy.SetActive(!rewarding && !(lines || fruit || backs));
+        rewardMenu.SetActive(rewarding);
+        mainMenu.SetActive(mained && !rewarding);
+        pauseMenu.SetActive(paused);
+        gameMenu.SetActive(canDraw);
+        shopMenu.SetActive(shopping);
+        shopBase.SetActive(!(lines || fruit || backs));
+        shopLine.SetActive(lines);
+        shopFruit.SetActive(fruit);
+        shopBack.SetActive(backs);
+        confirm.SetActive(confirming);
+        refuse.SetActive(rejecting);
+        gameOver.SetActive((!MR.isVisible && !mained && !shopping));
+        wallet.gameObject.SetActive(!rewarding);
+    }
+
+    //--------------------------------------------------------------------------------------------- BUTTON FUNCTIONS
+    //Accept the daily rewards
+    public void Accept()
+    {
+        wallet.gameObject.SetActive(true);
+        Destroy(chest);
+        mained = true;
+        rewarding = false;
+    }
+
+    //Gameplay
+    public void Game()
+    {
+        if (!rewarding && !shopping && mained) {
+            countdown = 3;
             StartCoroutine(Delay());
+            paused = false;
+            mained = false;
+        }
+    }
+
+    //Function takes NXXX, with N being design number & XXX being cost
+    public void Item(int NumCost)
+    {
+        if (!confirming) {
+            int num = NumCost / 1000;
+            int cost = NumCost - (num * 1000);
+            if (!unlocks[currentMenu].Contains((int)num)) {
+                if (currency >= (int)cost) {
+                    price = new Vector2(num, cost);
+                    confirming = true;
+                } else {
+                    rejecting = true;
+                    Play(buyFail, 0.6f);
+                    StartCoroutine(Wait());
+                }
+            } else {
+                Change((int)num);
+            }
         }
     }
 
@@ -239,35 +380,6 @@ public class GameManager : MonoBehaviour
         RecordSaveData();
     }
 
-    //Show desired menu
-    private void ShowMenus()
-    {
-        rewardMenu.SetActive(rewarding);
-        mainMenu.SetActive(mained && !rewarding);
-        pauseMenu.SetActive(paused);
-        gameMenu.SetActive(canDraw);
-        shopMenu.SetActive(shopping);
-        shopBase.SetActive(!(lines || fruit || backs));
-        shopLine.SetActive(lines);
-        shopFruit.SetActive(fruit);
-        shopBack.SetActive(backs);
-        confirm.SetActive(confirming);
-        refuse.SetActive(rejecting);
-        gameOver.SetActive((!MR.isVisible && !mained));
-        wallet.gameObject.SetActive(!rewarding);
-    }
-
-    //Gameplay
-    public void Game()
-    {
-        if (!rewarding && !shopping && mained) {
-            countdown = 3;
-            StartCoroutine(Delay());
-            paused = false;
-            mained = false;
-        }
-    }
-
     //Gameover
     public void Over()
     {
@@ -277,57 +389,14 @@ public class GameManager : MonoBehaviour
         Erase();
     }
 
-    //Play sound effect
-    public void Play(AudioClip clip, float volume)
+    //Open pause menu, halt gameplay
+    public void Pause(bool onOff)
     {
-        SFX.PlayOneShot(clip, volume);
-    }
-
-    //Chain rewards
-    private void Rewards()
-    {
-        currency += chain * 5;
-        loginBonus.text = "$" + (chain * 5).ToString();
-        SaveData("LastLogin", day);
-        SaveData("LastMonth", month);
-        SaveData("LoginChain", chain);
-        SaveData("Money", currency);
-    }
-
-    //Accept the daily rewards
-    public void Accept()
-    {
-        wallet.gameObject.SetActive(true);
-        Destroy(chest);
-        mained = true;
-        rewarding = false;
-    }
-
-    //Remove all bombs
-    private void Erase()
-    {
-        GameObject[] clear = GameObject.FindGameObjectsWithTag("Respawn");
-        foreach (GameObject obj in clear) Destroy(obj);
-    }
-
-    //Function takes NXXX, with N being design number & XXX being cost
-    public void Item(int NumCost)
-    {
-        if (!confirming) {
-            int num = NumCost/1000;
-            int cost = NumCost - (num * 1000);
-            if (!unlocks[currentMenu].Contains((int)num)) {
-                if (currency >= (int)cost) {
-                    price = new Vector2(num, cost);
-                    confirming = true;
-                } else {
-                    rejecting = true;
-                    Play(buyFail, 0.6f);
-                    StartCoroutine(Wait());
-                }
-            } else {
-                Change((int)num);
-            }
+        paused = onOff;
+        canDraw = !onOff;
+        if (!onOff) {
+            countdown = 1;
+            StartCoroutine(Delay());
         }
     }
 
@@ -345,43 +414,6 @@ public class GameManager : MonoBehaviour
             Play(buySucc, 0.4f);
         }
         confirming = false;
-    }
-
-    //Change desired value 
-    private void Change(int val)
-    {
-        switch (currentMenu) {
-            case 0:
-                mode = val;
-                draws += val.ToString() + "_";
-                break;
-            case 1:
-                food = val;
-                basket += val.ToString() + "_";
-                break;
-            case 2:
-                ground = val;
-                area += val.ToString() + "_";
-                break;
-        }
-        Set();
-    }
-
-    //Sets all things to their values
-    private void Set()
-    {
-        BG.Mat(ground);
-        FT.Swap(food);
-        LN.Design(mode);
-        strings[0] = draws;
-        strings[1] = basket;
-        strings[2] = area;
-    }
-
-    //Remove the price of designs already purchased
-    public void SetText(int ID)
-    {
-        shopScroll[currentMenu].transform.GetChild(ID).GetChild(1).GetComponent<TextMeshProUGUI>().text = " ";
     }
 
     //Reset shop position and open shop menu
@@ -402,46 +434,7 @@ public class GameManager : MonoBehaviour
         backs = (menu == 3);
     }
 
-    //Move shop menu with swipe
-    public void Scroll(float move)
-    {
-        Vector3 pos = shopScroll[currentMenu].transform.localPosition;
-        shopScroll[currentMenu].transform.localPosition = new Vector3(pos.x, Mathf.Clamp(pos.y + (150 * move), 0, 300 * (DESIGNS[currentMenu] - 6)), pos.z);
-    }
-
-    //Take string, split it, convert to int, then set unlocked list
-    private void ConvertData(List<int> array)
-    {
-        split = list.Split('_');
-        unlock = new int[split.Length - 1];
-        for (int i = 0; i < split.Length - 1; i++) {
-            if (int.TryParse(split[i], out int res)) unlock[i] = res;
-        }
-        array.Clear();
-        for (int i = 0; i < unlock.Length; i++) array.Insert(i, unlock[i]);
-    }
-
-    //Exit exe (Non mobile only)
-    public void Quit()
-    {
-        Application.Quit();
-    }
-
-    //Record all save data
-    public void RecordSaveData()
-    {
-        SaveData("Record", best);
-        SaveData("Money", currency);
-        SaveData("Design", mode);
-        SaveData("Defend", food);
-        SaveData("Picture", ground);
-        SaveData("LastLogin", day);
-        SaveData("LoginChain", chain);
-        PlayerPrefs.SetString("Inventory", draws);
-        PlayerPrefs.SetString("Fruits", basket);
-        PlayerPrefs.SetString("Background", area);
-    }
-
+    //--------------------------------------------------------------------------------------------- SAVE DATA
     //Clear all saved data
     public void DeleteSaveData()
     {
@@ -470,19 +463,28 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    //Record all save data
+    public void RecordSaveData()
+    {
+        SaveData("Record", best);
+        SaveData("Money", currency);
+        SaveData("Design", mode);
+        SaveData("Defend", food);
+        SaveData("Picture", ground);
+        SaveData("LastLogin", day);
+        SaveData("LoginChain", chain);
+        PlayerPrefs.SetString("Inventory", draws);
+        PlayerPrefs.SetString("Fruits", basket);
+        PlayerPrefs.SetString("Background", area);
+    }
+
     //Write input data to input Key
     public void SaveData(string Key, int Data)
     {
         PlayerPrefs.SetInt(Key, Data);
     }
 
-    //"Not enough cash" message lasts for 1.25sec
-    private IEnumerator Wait()
-    {
-        yield return new WaitForSeconds(1.25f);
-        rejecting = false;
-    }
-
+    //--------------------------------------------------------------------------------------------- IENUMERATORS LAST
     //Game has a countdown before starting
     private IEnumerator Delay()
     {
@@ -491,9 +493,17 @@ public class GameManager : MonoBehaviour
         if (countdown > 0) StartCoroutine(Delay());
     }
 
+    //Daily rewards delayed UI appearance
     private IEnumerator Halt(float time, GameObject menu)
     {
         yield return new WaitForSeconds(time);
         menu.SetActive(true);
+    }
+
+    //"Not enough cash" message lasts for 1.25sec
+    private IEnumerator Wait()
+    {
+        yield return new WaitForSeconds(1.25f);
+        rejecting = false;
     }
 }

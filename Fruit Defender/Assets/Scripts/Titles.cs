@@ -8,6 +8,6 @@ public class Titles : MonoBehaviour
     void Update()
     {
         if (previous == null) wait += Time.deltaTime;
-        if (Input.GetMouseButton(0) && previous == null && wait > 1) Destroy(gameObject);
+        if (Input.GetMouseButton(0) && previous == null && wait > 0.75f) Destroy(gameObject);
     }
 }

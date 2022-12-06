@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 5406041504194853433}
   - component: {fileID: 5406041504194853435}
   - component: {fileID: 7785145010726266907}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Model
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -127,7 +127,7 @@ GameObject:
   - component: {fileID: 5406041505603806168}
   - component: {fileID: 5406041505603806167}
   - component: {fileID: 5406041505603806171}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Coin
   m_TagString: Respawn
   m_Icon: {fileID: 0}
@@ -203,7 +203,7 @@ SphereCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.45
-  m_Center: {x: 0, y: 0, z: 5}
+  m_Center: {x: 0, y: 0, z: 2.5}
 --- !u!114 &5406041505603806171
 MonoBehaviour:
   m_ObjectHideFlags: 0

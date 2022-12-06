@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4655469649890885894}
   - component: {fileID: 5977156944817176265}
   - component: {fileID: 6853774970058540858}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Model
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -111,7 +111,7 @@ GameObject:
   - component: {fileID: 8063016533847474245}
   - component: {fileID: 8063016533847474244}
   - component: {fileID: 8063016533847474264}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Bomb
   m_TagString: Respawn
   m_Icon: {fileID: 0}
@@ -187,7 +187,7 @@ SphereCollider:
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.45
-  m_Center: {x: 0, y: 0, z: 5}
+  m_Center: {x: 0, y: 0, z: 2.5}
 --- !u!114 &8063016533847474264
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -220,7 +220,7 @@ GameObject:
   - component: {fileID: 2212229400517819772}
   - component: {fileID: 4135122501903103086}
   - component: {fileID: 3551497474214649514}
-  m_Layer: 0
+  m_Layer: 5
   m_Name: Particle System
   m_TagString: Untagged
   m_Icon: {fileID: 0}
