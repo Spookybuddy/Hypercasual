@@ -180,7 +180,7 @@ ScriptsOnlyBuild:
     className: Toggle
   - hash:
       serializedVersion: 2
-      Hash: 18cc80cdb93161f206b883085d548622
+      Hash: 9626993d8debcbf144b92b42e332dffe
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: FadeOut
@@ -228,7 +228,7 @@ ScriptsOnlyBuild:
     className: TMP_FontAsset
   - hash:
       serializedVersion: 2
-      Hash: 7303eb38f75c449020f5cb4550b5f81b
+      Hash: 70baff44c533341030b5de498b998fa6
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: GameManager

@@ -6,7 +6,7 @@ using TMPro;
 public class GameManager : MonoBehaviour
 {
     //menus
-    public TextMeshProUGUI score, total, record, wallet, gamedown, loginBonus;
+    public TextMeshProUGUI score, total, record, wallet, gamedown, loginBonus, ratio;
     public GameObject rewardMenu, pauseMenu, mainMenu, gameMenu, gameOver, shopMenu, shopBase, shopLine, shopBack, shopFruit, confirm, refuse, trophy, treasure, arise, recieve, title;
     public GameObject[] shopScroll;
     public AudioSource MusicM, MusicG, SFX;
@@ -42,6 +42,13 @@ public class GameManager : MonoBehaviour
     private string list;
     private string[] split;
     private int[] unlock;
+
+    void Awake()
+    {
+        //Screen resolution
+        ratio.text = Screen.width.ToString() + " : " + Screen.height.ToString();
+        //Screen.SetResolution(1280, 720, false);
+    }
 
     void Start()
     {

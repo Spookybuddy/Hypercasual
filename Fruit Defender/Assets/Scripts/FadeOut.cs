@@ -9,7 +9,6 @@ public class FadeOut : MonoBehaviour
     private bool speedUp;
     public float timer;
     public Material mat;
-    public MeshRenderer rend;
 
     void Update()
     {
@@ -21,7 +20,6 @@ public class FadeOut : MonoBehaviour
             countdown -= Time.deltaTime * (speedUp ? 4.5f : 1.5f);
         }
         mat.SetColor("_Color", new Color(1, 1, 1, Mathf.Clamp01(countdown / (timer - 1))));
-        rend.material = mat;
         if (countdown < -0.75f) Destroy(gameObject);
     }
 }
