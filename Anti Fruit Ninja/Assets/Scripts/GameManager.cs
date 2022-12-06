@@ -6,84 +6,42 @@ using TMPro;
 public class GameManager : MonoBehaviour
 {
     //menus
-    public GameObject rewardMenu;
-    public GameObject pauseMenu;
-    public GameObject mainMenu;
-    public GameObject gameMenu;
-    public TextMeshProUGUI score;
-    public TextMeshProUGUI total;
-    public TextMeshProUGUI record;
-    public TextMeshProUGUI wallet;
-    public TextMeshProUGUI gamedown;
-    public TextMeshProUGUI loginBonus;
-    public GameObject gameOver;
-    public GameObject shopMenu;
-    public GameObject shopBase;
-    public GameObject shopLine;
-    public GameObject shopBack;
-    public GameObject shopFruit;
+    public TextMeshProUGUI score, total, record, wallet, gamedown, loginBonus;
+    public GameObject rewardMenu, pauseMenu, mainMenu, gameMenu, gameOver, shopMenu, shopBase, shopLine, shopBack, shopFruit, confirm, refuse, trophy, treasure, arise, recieve, title;
     public GameObject[] shopScroll;
-    public GameObject confirm;
-    public GameObject refusal;
-    public GameObject trophy;
-    public GameObject treasureChest;
-    public GameObject risingCash;
-    public GameObject delayedButton;
-
     public AudioSource MusicM, MusicG, SFX;
-    public AudioClip loseTwang;
-    public AudioClip buyFail;
-    public AudioClip buySucc;
-    public AudioClip menuBoop;
-    public AudioClip menuBack;
+    public AudioClip loseTwang, buyFail, buySucc, menuBoop, menuBack;
     private Renderer MR;
-
-    private int maxObjects;
+    private int maxObjects, currentMenu, past;
     private GameObject chest;
-    public GameObject[] prefab1;
-    public GameObject[] prefab2;
+    public GameObject[] prefab1, prefab2;
     private GameObject[,] prefabs;
     private List<Vector3> warnings = new List<Vector3>();
     private List<GameObject> actives = new List<GameObject>();
-    public bool canDraw;
-    public bool canDoodle;
-    private bool mained, paused, shopping, lines, backs, fruit, confirming, rejecting, tutoring, rewarding;
+    public bool canDraw, canDoodle;
+    private bool mained, paused, shopping, lines, backs, fruit, confirming, rejecting, tutoring, rewarding, triggered;
     private Vector2 price;
-
     public Backgrounds BG;
     public Fruits FT;
     public Line LN;
-    private int currentMenu;
     public int[] DESIGNS;
-
     private float difficultyTime;
-    private int past;
-    public int countdown;
-    public int points;
+    public int countdown, points;
 
     //Save data
-    private int month;
-    private int day;
-    public int chain;
-    private int best;
-    public int currency;
+    private int month, day, best;
+    public int chain, currency, mode, food, ground;
     private List<int> unlocked = new List<int>();
     private string draws;
     private List<int> unlocked2 = new List<int>();
     private string basket;
     private List<int> unlocked3 = new List<int>();
     private string area;
-
     private List<List<int>> unlocks = new List<List<int>>();
     private string[] strings = new string[3];
-
     private string list;
     private string[] split;
     private int[] unlock;
-
-    public int mode;
-    public int food;
-    public int ground;
 
     void Start()
     {
@@ -118,6 +76,7 @@ public class GameManager : MonoBehaviour
         //tutoring = true;
         maxObjects = 0;
         MR = trophy.GetComponent<Renderer>();
+        wallet.gameObject.SetActive(false);
 
         //Update shop text
         list = draws;
@@ -126,8 +85,7 @@ public class GameManager : MonoBehaviour
         ConvertData(unlocked2);
         list = area;
         ConvertData(unlocked3);
-        for (int i = 0; i < DESIGNS.Length; i++)
-        {
+        for (int i = 0; i < DESIGNS.Length; i++) {
             currentMenu = i;
             for (int j = 0; j < DESIGNS[i]; j++) if (unlocks[i].Contains(j)) SetText(j);
         }
@@ -145,35 +103,37 @@ public class GameManager : MonoBehaviour
             //Missed consecutive day
             if (!first && !next) {
                 chain = 1;
-                Rewards();
-                Debug.Log("Chain broken");
-            }
-
-            //Consecutive day
-            if (first || next) {
+            } else {
                 day = System.DateTime.Now.Day;
                 month = System.DateTime.Now.Month;
                 chain++;
-                Rewards();
             }
 
+            Rewards();
             rewarding = true;
-            risingCash.transform.localPosition = Vector3.up * -300;
-            risingCash.SetActive(false);
-            delayedButton.SetActive(false);
-            chest = Instantiate(treasureChest, new Vector3(0, 8, -3), Quaternion.identity) as GameObject;
-            StartCoroutine(Halt(5.5f, risingCash));
-            StartCoroutine(Halt(7, delayedButton));
-            Debug.Log("Login Bonus");
+            arise.transform.localPosition = Vector3.up * -300;
+            arise.SetActive(false);
+            recieve.SetActive(false);
         }
-
-        ShowMenus();
     }
 
     void Update()
     {
-        ShowMenus();
-        Debug.Log(rewarding);
+        //Wait until the title screen is exited
+        if (title == null && !triggered) {
+            triggered = true;
+
+            //Daily reward
+            if (rewarding) {
+                chest = Instantiate(treasure, new Vector3(0, 8, -3), Quaternion.identity) as GameObject;
+                StartCoroutine(Halt(5.5f, arise));
+                StartCoroutine(Halt(7, recieve));
+            }
+
+            ShowMenus();
+        }
+
+        if (!rewarding && title == null) ShowMenus();
 
         //Bools based on what menus are active
         canDraw = !(paused || mained || shopping);
@@ -228,8 +188,8 @@ public class GameManager : MonoBehaviour
         }
 
         //Raise text
-        Transform cashForm = risingCash.transform;
-        if (risingCash.activeInHierarchy && cashForm.localPosition.y < 0.1f) {
+        Transform cashForm = arise.transform;
+        if (arise.activeInHierarchy && cashForm.localPosition.y < 0.1f) {
             cashForm.localPosition = Vector3.MoveTowards(cashForm.localPosition, Vector3.zero, Time.deltaTime * -cashForm.localPosition.y * 1.5f);
         }
     }
@@ -240,7 +200,7 @@ public class GameManager : MonoBehaviour
         paused = onOff;
         canDraw = !onOff;
         if (!onOff) {
-            countdown = 3;
+            countdown = 1;
             StartCoroutine(Delay());
         }
     }
@@ -285,8 +245,9 @@ public class GameManager : MonoBehaviour
         shopFruit.SetActive(fruit);
         shopBack.SetActive(backs);
         confirm.SetActive(confirming);
-        refusal.SetActive(rejecting);
+        refuse.SetActive(rejecting);
         gameOver.SetActive((!MR.isVisible && !mained));
+        wallet.gameObject.SetActive(!rewarding);
     }
 
     //Gameplay
@@ -319,7 +280,6 @@ public class GameManager : MonoBehaviour
     private void Rewards()
     {
         currency += chain * 5;
-        wallet.gameObject.SetActive(false);
         loginBonus.text = "$" + (chain * 5).ToString();
         SaveData("LastLogin", day);
         SaveData("LastMonth", month);
