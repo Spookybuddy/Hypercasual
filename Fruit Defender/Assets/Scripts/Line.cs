@@ -42,7 +42,7 @@ public class Line : MonoBehaviour
 
         drawn.positionCount = maxLength;
         drawn.startWidth = 0.1f;
-        drawn.endWidth = 0.25f;
+        drawn.endWidth = 0.2f;
 
         sumDistance = 0;
         offset = 0;

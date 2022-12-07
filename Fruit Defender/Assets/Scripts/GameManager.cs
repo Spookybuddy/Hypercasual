@@ -6,12 +6,13 @@ using TMPro;
 public class GameManager : MonoBehaviour
 {
     //menus
-    public TextMeshProUGUI score, total, record, wallet, gamedown, loginBonus, ratio;
-    public GameObject rewardMenu, pauseMenu, mainMenu, gameMenu, gameOver, shopMenu, shopBase, shopLine, shopBack, shopFruit, confirm, refuse, trophy, treasure, arise, recieve, title;
+    public TextMeshProUGUI score, total, recordE, walletE, gamedown, loginBonus, ratio, baseWallet, topWallet, baseBest, topBest;
+    public GameObject rMenu, pMenu, mMenu, gMenu, gOver, sMenu, sBase, sLine, sBack, sFruit, confirm, refuse, trophy, treasure, arise, recieve, title, top, bot, optMenu;
     public GameObject[] shopScroll;
     public AudioSource MusicM, MusicG, SFX;
     public AudioClip loseTwang, buyFail, buySucc, menuBoop, menuBack;
     private Renderer MR;
+    public Renderer TR, BR;
     private int maxObjects, currentMenu, past;
     private GameObject chest;
     public GameObject[] prefab1, prefab2;
@@ -84,7 +85,7 @@ public class GameManager : MonoBehaviour
         maxObjects = 0;
         MR = trophy.GetComponent<Renderer>();
         trophy.SetActive(false);
-        wallet.gameObject.SetActive(false);
+        walletE.gameObject.SetActive(false);
 
         //Update shop text
         list = draws;
@@ -126,8 +127,6 @@ public class GameManager : MonoBehaviour
     {
         //Wait until the title screen is exited
         if (title == null && !triggered) {
-            triggered = true;
-
             //Daily reward
             if (rewarding) {
                 chest = Instantiate(treasure, new Vector3(0, 8, -3), Quaternion.identity) as GameObject;
@@ -135,6 +134,7 @@ public class GameManager : MonoBehaviour
                 StartCoroutine(Halt(7, recieve));
             }
 
+            triggered = true;
             ShowMenus();
         }
 
@@ -152,8 +152,8 @@ public class GameManager : MonoBehaviour
         //Update texts
         score.text = "Score: " + points.ToString();
         total.text = "Final Score:\n" + points.ToString();
-        record.text = "Record: " + best.ToString();
-        wallet.text = "$" + currency.ToString();
+        recordE.text = "Record: " + best.ToString();
+        walletE.text = "$" + currency.ToString();
         if (countdown != 0) gamedown.text = countdown.ToString();
         else gamedown.text = " ";
 
@@ -295,27 +295,32 @@ public class GameManager : MonoBehaviour
     //Show desired menu
     private void ShowMenus()
     {
+        //Check if the top & bottom areas are visible, and if they are move some menu assets to them
+        top.SetActive(TR.isVisible && !canDraw);
+        bot.SetActive(BR.isVisible && !canDraw);
+        if (TR.isVisible) { }
+
         trophy.SetActive(!rewarding && !(lines || fruit || backs));
-        rewardMenu.SetActive(rewarding);
-        mainMenu.SetActive(mained && !rewarding);
-        pauseMenu.SetActive(paused);
-        gameMenu.SetActive(canDraw);
-        shopMenu.SetActive(shopping);
-        shopBase.SetActive(!(lines || fruit || backs));
-        shopLine.SetActive(lines);
-        shopFruit.SetActive(fruit);
-        shopBack.SetActive(backs);
+        rMenu.SetActive(rewarding);
+        mMenu.SetActive(mained && !rewarding);
+        pMenu.SetActive(paused);
+        gMenu.SetActive(canDraw);
+        sMenu.SetActive(shopping);
+        sBase.SetActive(!(lines || fruit || backs));
+        sLine.SetActive(lines);
+        sFruit.SetActive(fruit);
+        sBack.SetActive(backs);
         confirm.SetActive(confirming);
         refuse.SetActive(rejecting);
-        gameOver.SetActive((!MR.isVisible && !mained && !shopping));
-        wallet.gameObject.SetActive(!rewarding);
+        gOver.SetActive((!MR.isVisible && !mained && !shopping));
+        walletE.gameObject.SetActive(!rewarding);
     }
 
     //--------------------------------------------------------------------------------------------- BUTTON FUNCTIONS
     //Accept the daily rewards
     public void Accept()
     {
-        wallet.gameObject.SetActive(true);
+        walletE.gameObject.SetActive(true);
         Destroy(chest);
         mained = true;
         rewarding = false;
