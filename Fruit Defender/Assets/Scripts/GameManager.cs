@@ -1,13 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class GameManager : MonoBehaviour
 {
     //menus
-    public TextMeshProUGUI score, total, recordE, walletE, gamedown, loginBonus, ratio, baseWallet, topWallet, baseBest, topBest;
-    public GameObject rMenu, pMenu, mMenu, gMenu, gOver, sMenu, sBase, sLine, sBack, sFruit, confirm, refuse, trophy, treasure, arise, recieve, title, top, bot, optMenu;
+    public TextMeshProUGUI score, total, recordE, walletE, gamedown, loginBonus, baseWallet, topWallet, baseBest, topBest;
+    public Slider[] sound;
+    public GameObject rMenu, pMenu, mMenu, gMenu, gOver, sMenu, sBase, sLine, sBack, sFruit, confirm, refuse, trophy, treasure, arise, recieve, title, optMenu, optMen2, dButtons;
     public GameObject[] shopScroll;
     public AudioSource MusicM, MusicG, SFX;
     public AudioClip loseTwang, buyFail, buySucc, menuBoop, menuBack;
@@ -20,7 +22,7 @@ public class GameManager : MonoBehaviour
     private List<Vector3> warnings = new List<Vector3>();
     private List<GameObject> actives = new List<GameObject>();
     public bool canDraw, canDoodle;
-    private bool mained, paused, shopping, lines, backs, fruit, confirming, rejecting, tutoring, rewarding, triggered;
+    private bool mained, paused, shopping, lines, backs, fruit, confirming, rejecting, tutoring, rewarding, triggered, options, op2;
     private Vector2 price;
     public Backgrounds BG;
     public Fruits FT;
@@ -30,6 +32,7 @@ public class GameManager : MonoBehaviour
     public int countdown, points;
 
     //Save data
+    public float vol, muse, snd;
     private int month, day, best;
     public int chain, currency, mode, food, ground;
     private List<int> unlocked = new List<int>();
@@ -47,7 +50,6 @@ public class GameManager : MonoBehaviour
     void Awake()
     {
         //Screen resolution
-        ratio.text = Screen.width.ToString() + " : " + Screen.height.ToString();
         scrollDis = Mathf.Clamp(Screen.height / 10, 120, 300);
     }
 
@@ -61,16 +63,17 @@ public class GameManager : MonoBehaviour
         mode = GetSaveData("Design");
         food = GetSaveData("Defend");
         ground = GetSaveData("Picture");
+        vol = GetFloatData("Volume");
+        muse = GetFloatData("Music");
+        snd = GetFloatData("Effect");
         day = GetSaveData("LastLogin");
         day = (day == 0 ? System.DateTime.Now.Day - 1 : day);
         chain = GetSaveData("LoginChain");
         month = GetSaveData("LastMonth");
         month = (month == 0 ? System.DateTime.Now.Month : month);
-
         draws = GetStringData("Inventory");
         basket = GetStringData("Fruits");
         area = GetStringData("Background");
-
         unlocks.Insert(0, unlocked);
         unlocks.Insert(1, unlocked2);
         unlocks.Insert(2, unlocked3);
@@ -81,11 +84,11 @@ public class GameManager : MonoBehaviour
         paused = false;
         canDraw = false;
         shopping = false;
+        options = false;
+        op2 = false;
         //tutoring = true;
         maxObjects = 0;
         MR = trophy.GetComponent<Renderer>();
-        trophy.SetActive(false);
-        walletE.gameObject.SetActive(false);
 
         //Update shop text
         list = draws;
@@ -94,12 +97,12 @@ public class GameManager : MonoBehaviour
         ConvertData(unlocked2);
         list = area;
         ConvertData(unlocked3);
-        for (int i = 0; i < DESIGNS.Length; i++) {
-            currentMenu = i;
-            for (int j = 0; j < DESIGNS[i]; j++) if (unlocks[i].Contains(j)) SetText(j);
+        for (currentMenu = 0; currentMenu < DESIGNS.Length; currentMenu++) {
+            for (int j = 0; j < DESIGNS[currentMenu]; j++) if (unlocks[currentMenu].Contains(j)) SetText(j);
         }
         currentMenu = 0;
 
+        Volumes();
         MusicG.Stop();
         MusicM.Play();
 
@@ -121,6 +124,10 @@ public class GameManager : MonoBehaviour
             arise.SetActive(false);
             recieve.SetActive(false);
         }
+
+        //show/hide the correct things
+        ShowMenus();
+        trophy.SetActive(false);
     }
 
     void Update()
@@ -141,8 +148,8 @@ public class GameManager : MonoBehaviour
         if (!rewarding && title == null) ShowMenus();
 
         //Bools based on what menus are active
-        canDraw = !(paused || mained || shopping);
-        canDoodle = (mained || shopping);
+        canDraw = !(paused || mained || shopping || options || op2);
+        canDoodle = (mained || shopping || options);
         maxObjects = canDraw ? past : 0;
 
         //Add timer, max objects based on time passed
@@ -152,8 +159,8 @@ public class GameManager : MonoBehaviour
         //Update texts
         score.text = "Score: " + points.ToString();
         total.text = "Final Score:\n" + points.ToString();
-        recordE.text = "Record: " + best.ToString();
-        walletE.text = "$" + currency.ToString();
+        if (recordE != null) recordE.text = "Record: " + best.ToString();
+        if (walletE != null) walletE.text = "$" + currency.ToString();
         if (countdown != 0) gamedown.text = countdown.ToString();
         else gamedown.text = " ";
 
@@ -248,7 +255,7 @@ public class GameManager : MonoBehaviour
     //Play sound effect
     public void Play(AudioClip clip, float volume)
     {
-        SFX.PlayOneShot(clip, volume);
+        SFX.PlayOneShot(clip, volume * vol * snd);
     }
 
     //Exit exe (Non mobile only)
@@ -296,24 +303,48 @@ public class GameManager : MonoBehaviour
     private void ShowMenus()
     {
         //Check if the top & bottom areas are visible, and if they are move some menu assets to them
-        top.SetActive(TR.isVisible && !canDraw);
-        bot.SetActive(BR.isVisible && !canDraw);
-        if (TR.isVisible) { }
+        if (TR.isVisible) {
+            walletE = topWallet;
+            recordE = topBest;
+        } else {
+            walletE = baseWallet;
+            recordE = baseBest;
+        }
+        dButtons.SetActive(!BR.isVisible);
 
-        trophy.SetActive(!rewarding && !(lines || fruit || backs));
+        trophy.SetActive(!rewarding && !(lines || fruit || backs) && !options);
         rMenu.SetActive(rewarding);
         mMenu.SetActive(mained && !rewarding);
         pMenu.SetActive(paused);
         gMenu.SetActive(canDraw);
         sMenu.SetActive(shopping);
+        optMenu.SetActive(options);
         sBase.SetActive(!(lines || fruit || backs));
         sLine.SetActive(lines);
         sFruit.SetActive(fruit);
         sBack.SetActive(backs);
         confirm.SetActive(confirming);
         refuse.SetActive(rejecting);
-        gOver.SetActive((!MR.isVisible && !mained && !shopping));
+        gOver.SetActive((!MR.isVisible && !mained && !shopping && !options && !op2 && !paused));
         walletE.gameObject.SetActive(!rewarding);
+    }
+
+    //Update slider displays
+    private void SliderDisplay()
+    {
+        sound[0].value = vol;
+        sound[1].value = muse;
+        sound[2].value = snd;
+        sound[3].value = vol;
+        sound[4].value = muse;
+        sound[5].value = snd;
+    }
+
+    //Volume settings
+    private void Volumes()
+    {
+        MusicG.volume = 0.14f * vol * muse;
+        MusicM.volume = 0.14f * vol * muse;
     }
 
     //--------------------------------------------------------------------------------------------- BUTTON FUNCTIONS
@@ -398,7 +429,6 @@ public class GameManager : MonoBehaviour
     public void Pause(bool onOff)
     {
         paused = onOff;
-        canDraw = !onOff;
         if (!onOff) {
             countdown = 1;
             StartCoroutine(Delay());
@@ -421,13 +451,43 @@ public class GameManager : MonoBehaviour
         confirming = false;
     }
 
+    //Settings menu from main
+    public void Settings(bool onOff)
+    {
+        mained = !onOff;
+        options = onOff;
+        SliderDisplay();
+        RecordSaveData();
+    }
+
+    //Settings menu from option
+    public void Settings(int overload)
+    {
+        op2 = (overload == 1);
+        paused = (overload == 0);
+        SliderDisplay();
+        optMen2.SetActive(op2);
+        RecordSaveData();
+    }
+
     //Reset shop position and open shop menu
     public void Shop()
     {
         foreach(GameObject menu in shopScroll) menu.transform.localPosition = Vector3.zero;
         mained = false;
         shopping = true;
-    } 
+    }
+
+    //Slider movement
+    public void Slide(int three)
+    {
+        if (Input.GetMouseButton(0) && (options || op2)) {
+            vol = sound[0 + three].value;
+            muse = sound[1 + three].value;
+            snd = sound[2 + three].value;
+        }
+        Volumes();
+    }
 
     //Set submenu to true/false based on input value
     public void SubMenu(int menu)
@@ -444,6 +504,28 @@ public class GameManager : MonoBehaviour
     public void DeleteSaveData()
     {
         PlayerPrefs.DeleteAll();
+        month = 0;
+        day = 0;
+        best = 0;
+        vol = 0;
+        muse = 0;
+        snd = 0;
+        chain = 0;
+        currency = 0;
+        mode = 0;
+        food = 0;
+        ground = 0;
+    }
+
+    //Return the saved float data, 1 otherwise
+    private float GetFloatData(string Key)
+    {
+        if (PlayerPrefs.HasKey(Key)) {
+            return PlayerPrefs.GetFloat(Key);
+        } else {
+            PlayerPrefs.SetFloat(Key, 1);
+            return 1;
+        }
     }
 
     //Return any saved int data, 0 otherwise
@@ -476,6 +558,9 @@ public class GameManager : MonoBehaviour
         SaveData("Design", mode);
         SaveData("Defend", food);
         SaveData("Picture", ground);
+        SaveData("Volume", vol);
+        SaveData("Music", muse);
+        SaveData("Effect", snd);
         SaveData("LastLogin", day);
         SaveData("LoginChain", chain);
         PlayerPrefs.SetString("Inventory", draws);
@@ -484,10 +569,8 @@ public class GameManager : MonoBehaviour
     }
 
     //Write input data to input Key
-    public void SaveData(string Key, int Data)
-    {
-        PlayerPrefs.SetInt(Key, Data);
-    }
+    public void SaveData(string Key, int Data) { PlayerPrefs.SetInt(Key, Data); }
+    public void SaveData(string Key, float Data) { PlayerPrefs.SetFloat(Key, Data); }
 
     //--------------------------------------------------------------------------------------------- IENUMERATORS LAST
     //Game has a countdown before starting

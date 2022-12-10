@@ -9,9 +9,8 @@ public class Objects : MonoBehaviour
     public Rigidbody rig;
 
     public Vector3 spawn;
-    private bool paused;
+    private bool paused, hasHit, regain;
     private Vector3 storedVelo;
-    private bool hasHit;
 
     public bool goodBad;
     public Vector3 rotateAxis;
@@ -24,6 +23,7 @@ public class Objects : MonoBehaviour
         script = GameObject.FindWithTag("GameController").GetComponent<GameManager>();
         spawn = transform.position;
         hasHit = false;
+        regain = false;
         rig.useGravity = false;
         script.Play(alertSound, 0.5f);
         StartCoroutine(waitFor());
@@ -43,6 +43,7 @@ public class Objects : MonoBehaviour
         } else if (script.canDraw && script.countdown == 0) {
             rig.useGravity = true;
             rig.velocity = storedVelo;
+            if (regain) Force();
             paused = false;
         }
 
@@ -50,12 +51,20 @@ public class Objects : MonoBehaviour
         if (!MR.isVisible && Vector3.Distance(spawn, transform.position) > 10 && !paused) Destroy(gameObject);
     }
 
-    private IEnumerator waitFor()
+    //Add force
+    private void Force()
     {
-        yield return new WaitForSeconds(0.75f);
         rig.useGravity = true;
         rig.AddForce(new Vector3(-1.25f * spawn.x, -1.33333f * spawn.y + 3, 0), ForceMode.Impulse);
         script.Play(whistleSound, 0.3f);
+        regain = false;
+    }
+
+    private IEnumerator waitFor()
+    {
+        yield return new WaitForSeconds(0.75f);
+        if (!paused) Force();
+        else regain = true;
     }
 
     void OnTriggerEnter(Collider collision)

@@ -31,6 +31,7 @@ ScriptsOnlyBuild:
     - UnityEngine.UI.GraphicRaycaster
     - UnityEngine.UI.Image
     - UnityEngine.UI.RawImage
+    - UnityEngine.UI.Slider
   sceneClasses:
     Assets/Scenes/Game.unity:
     - Class: 1
@@ -79,6 +80,8 @@ ScriptsOnlyBuild:
       Script: {instanceID: 1506}
     - Class: 114
       Script: {instanceID: 1600}
+    - Class: 114
+      Script: {instanceID: 1646}
     - Class: 114
       Script: {instanceID: 1666}
     - Class: 114
@@ -228,7 +231,7 @@ ScriptsOnlyBuild:
     className: TMP_FontAsset
   - hash:
       serializedVersion: 2
-      Hash: 70baff44c533341030b5de498b998fa6
+      Hash: fdfca583291afa4001b5d93c5ec60a5a
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: GameManager
