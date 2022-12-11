@@ -9,20 +9,18 @@ public class Objects : MonoBehaviour
     public Rigidbody rig;
 
     public Vector3 spawn;
-    private bool paused, hasHit, regain;
+    private bool paused, regain;
     private Vector3 storedVelo;
 
     public bool goodBad;
     public Vector3 rotateAxis;
-    public AudioClip alertSound;
-    public AudioClip whistleSound;
-    public AudioClip hitSound;
+    public AudioClip alertSound, whistleSound, hitSound, yesSound;
+    public Vector3[] X, Y;
 
     void Start()
     {
         script = GameObject.FindWithTag("GameController").GetComponent<GameManager>();
         spawn = transform.position;
-        hasHit = false;
         regain = false;
         rig.useGravity = false;
         script.Play(alertSound, 0.5f);
@@ -48,14 +46,17 @@ public class Objects : MonoBehaviour
         }
 
         //Out of sight and away from spawn location
-        if (!MR.isVisible && Vector3.Distance(spawn, transform.position) > 10 && !paused) Destroy(gameObject);
+        if (!MR.isVisible && Vector3.Distance(spawn, transform.position) > 4 && !paused) Destroy(gameObject);
     }
 
     //Add force
     private void Force()
     {
+        int type = Random.Range(0, 3);
+        int index = Mathf.RoundToInt(Mathf.Clamp(-spawn.y, 0, 6));
+        //Debug.Log(index + ": " + type);
         rig.useGravity = true;
-        rig.AddForce(new Vector3(-1.25f * spawn.x, -1.33333f * spawn.y + 3, 0), ForceMode.Impulse);
+        rig.AddForce(new Vector3(X[index][type] * -Mathf.Sign(spawn.x), Y[index][type], 0), ForceMode.Impulse);
         script.Play(whistleSound, 0.3f);
         regain = false;
     }
@@ -69,18 +70,14 @@ public class Objects : MonoBehaviour
 
     void OnTriggerEnter(Collider collision)
     {
-        if (goodBad) {
-            if (collision.CompareTag("Finish")) {
-                script.currency += 10;
-                script.Play(hitSound, 0.3f);
-                Destroy(gameObject);
-            }
-        } else {
-            if (!hasHit && !collision.CompareTag("Respawn")) {
-                script.points++;
-                script.Play(hitSound, 0.3f);
-                hasHit = true;
-            }
+        if (goodBad && collision.CompareTag("Finish")) {
+            Destroy(gameObject);
+            script.currency += 10;
+            script.Play(yesSound, 0.3f);
+        } else if (!collision.CompareTag("Respawn")) {
+            script.points++;
+            script.Play(hitSound, 0.3f);
         }
+        if (!goodBad) Destroy(gameObject);
     }
 }

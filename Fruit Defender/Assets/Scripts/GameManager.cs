@@ -7,14 +7,13 @@ using TMPro;
 public class GameManager : MonoBehaviour
 {
     //menus
-    public TextMeshProUGUI score, total, recordE, walletE, gamedown, loginBonus, baseWallet, topWallet, baseBest, topBest;
+    public TextMeshProUGUI score, total, record, wallet, gamedown, loginBonus, timer;
     public Slider[] sound;
-    public GameObject rMenu, pMenu, mMenu, gMenu, gOver, sMenu, sBase, sLine, sBack, sFruit, confirm, refuse, trophy, treasure, arise, recieve, title, optMenu, optMen2, dButtons;
-    public GameObject[] shopScroll;
+    public GameObject rMenu, pMenu, mMenu, gMenu, gOver, sMenu, sBase, sLine, sBack, sFruit, confirm, refuse, trophy, treasure, arise, recieve, title, optMenu, optMen2;
+    public GameObject[] shopScroll, spawns;
     public AudioSource MusicM, MusicG, SFX;
     public AudioClip loseTwang, buyFail, buySucc, menuBoop, menuBack;
     private Renderer MR;
-    public Renderer TR, BR;
     private int maxObjects, currentMenu, past;
     private GameObject chest;
     public GameObject[] prefab1, prefab2;
@@ -24,11 +23,12 @@ public class GameManager : MonoBehaviour
     public bool canDraw, canDoodle;
     private bool mained, paused, shopping, lines, backs, fruit, confirming, rejecting, tutoring, rewarding, triggered, options, op2;
     private Vector2 price;
+    private Vector3 local;
     public Backgrounds BG;
     public Fruits FT;
     public Line LN;
     public int[] DESIGNS;
-    private float difficultyTime, scrollDis;
+    private float difficultyTime, scrollDis, cooldown;
     public int countdown, points;
 
     //Save data
@@ -51,6 +51,7 @@ public class GameManager : MonoBehaviour
     {
         //Screen resolution
         scrollDis = Mathf.Clamp(Screen.height / 10, 120, 300);
+        Debug.Log(Screen.width + " : " + Screen.height);
     }
 
     void Start()
@@ -153,14 +154,18 @@ public class GameManager : MonoBehaviour
         maxObjects = canDraw ? past : 0;
 
         //Add timer, max objects based on time passed
-        if (canDraw && countdown == 0) difficultyTime += Time.deltaTime;
-        past = Mathf.FloorToInt(difficultyTime / 20) + 1;
+        if (canDraw && countdown == 0) {
+            difficultyTime += Time.deltaTime;
+            cooldown -= Time.deltaTime;
+        }
+        past = Mathf.FloorToInt(Mathf.Clamp(Mathf.Pow(difficultyTime + 50, 2) / 4800 + 0.5f, 1, 26));
 
         //Update texts
+        timer.text = (difficultyTime / 60).ToString("00") + ":" + (difficultyTime % 60).ToString("00");
         score.text = "Score: " + points.ToString();
         total.text = "Final Score:\n" + points.ToString();
-        if (recordE != null) recordE.text = "Record: " + best.ToString();
-        if (walletE != null) walletE.text = "$" + currency.ToString();
+        if (record != null) record.text = "Record: " + best.ToString();
+        if (wallet != null) wallet.text = "$" + currency.ToString();
         if (countdown != 0) gamedown.text = countdown.ToString();
         else gamedown.text = " ";
 
@@ -168,13 +173,25 @@ public class GameManager : MonoBehaviour
         if (!MR.isVisible && !mained && !rewarding && !shopping) Over();
 
         //Spawn new bomb when #bomb is below desired amount
-        if (actives.Count < past && canDraw && countdown == 0) {
-            int weighted = Mathf.FloorToInt(Random.Range(0, 7)/6);
-            warnings.Insert(0, new Vector3(2.5f * Mathf.Sign(Random.Range(-1, 1)), Random.Range(-5, 5), 0));
-            Vector3 outside = warnings[0] + new Vector3(warnings[0].x, 0, 0);
-            GameObject baller = Instantiate(prefabs[weighted, 0], outside, Quaternion.identity) as GameObject;
+        if (actives.Count < past && canDraw && countdown == 0 && cooldown < 0) {
+            //Find a spot far enough away from other bombs
+            bool clear = false;
+            while (!clear) {
+                int height = Random.Range(-5 - (int)Mathf.Clamp01(past / 5), -1 + (int)Mathf.Clamp(past / 8, 0, 2));
+                local = new Vector3(spawns[Random.Range(0, 2)].transform.position.x, height, 0);
+                bool good = true;
+                foreach (GameObject actor in actives) {
+                    if (Vector3.Distance(actor.transform.position, local) < 4) good = false;
+                }
+                clear = good;
+            }
+
+            int weighted = Mathf.FloorToInt(Random.Range(0, 8) / 7);
+            cooldown = Mathf.Clamp01(1.1f / past * 10);
+            warnings.Insert(0, local);
+            GameObject baller = Instantiate(prefabs[weighted, 0], warnings[0], Quaternion.identity) as GameObject;
             actives.Insert(0, baller);
-            Instantiate(prefabs[weighted, 1], warnings[0], Quaternion.identity);
+            Instantiate(prefabs[weighted, 1], warnings[0]/1.5f, Quaternion.identity);
         }
 
         //Once bomb is gone, remove from lists to spawn new one
@@ -302,16 +319,6 @@ public class GameManager : MonoBehaviour
     //Show desired menu
     private void ShowMenus()
     {
-        //Check if the top & bottom areas are visible, and if they are move some menu assets to them
-        if (TR.isVisible) {
-            walletE = topWallet;
-            recordE = topBest;
-        } else {
-            walletE = baseWallet;
-            recordE = baseBest;
-        }
-        dButtons.SetActive(!BR.isVisible);
-
         trophy.SetActive(!rewarding && !(lines || fruit || backs) && !options);
         rMenu.SetActive(rewarding);
         mMenu.SetActive(mained && !rewarding);
@@ -326,7 +333,7 @@ public class GameManager : MonoBehaviour
         confirm.SetActive(confirming);
         refuse.SetActive(rejecting);
         gOver.SetActive((!MR.isVisible && !mained && !shopping && !options && !op2 && !paused));
-        walletE.gameObject.SetActive(!rewarding);
+        wallet.gameObject.SetActive(!rewarding && !canDraw);
     }
 
     //Update slider displays
@@ -351,7 +358,7 @@ public class GameManager : MonoBehaviour
     //Accept the daily rewards
     public void Accept()
     {
-        walletE.gameObject.SetActive(true);
+        wallet.gameObject.SetActive(true);
         Destroy(chest);
         mained = true;
         rewarding = false;

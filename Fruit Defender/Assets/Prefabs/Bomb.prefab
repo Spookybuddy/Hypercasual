@@ -208,7 +208,24 @@ MonoBehaviour:
   rotateAxis: {x: 0, y: 1, z: 0}
   alertSound: {fileID: 8300000, guid: 60c96565c9aa4cd4a9732be359a02eae, type: 3}
   whistleSound: {fileID: 8300000, guid: fdca2e3d66bfff940a7dbf02affe589b, type: 3}
-  hitSound: {fileID: 8300000, guid: 32f84d29900527e4685df5ceddb8fa0e, type: 3}
+  hitSound: {fileID: 8300000, guid: 3aa34e9925092254ea57e0ab3e418774, type: 3}
+  yesSound: {fileID: 0}
+  X:
+  - {x: 4.5, y: 4, z: 3.5}
+  - {x: 4.6, y: 4, z: 3.25}
+  - {x: 5, y: 4, z: 3}
+  - {x: 4.6, y: 3.5, z: 2.75}
+  - {x: 4.2, y: 3.5, z: 2.5}
+  - {x: 3.8, y: 3.5, z: 2}
+  - {x: 3.8, y: 3.5, z: 2}
+  Y:
+  - {x: 4, y: 4.5, z: 5.25}
+  - {x: 5, y: 5.5, z: 6}
+  - {x: 6, y: 6.5, z: 7}
+  - {x: 7.2, y: 7.8, z: 8.4}
+  - {x: 8.5, y: 9, z: 9.9}
+  - {x: 10, y: 10.5, z: 11.4}
+  - {x: 11.5, y: 11, z: 12.5}
 --- !u!1 &8840311754964726991
 GameObject:
   m_ObjectHideFlags: 0

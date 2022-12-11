@@ -60,7 +60,7 @@ public class Line : MonoBehaviour
 
         //Get tap position and add it to a list
         if (mouseDown && Physics.Raycast(view, out RaycastHit hit) && (script.canDraw || script.canDoodle)) {
-            if (Vector3.Distance(add, new Vector3(hit.point.x, hit.point.y, 0)) > 0.001f) {
+            if (Vector3.Distance(add, new Vector3(hit.point.x, hit.point.y, 0)) > 0.0005f) {
                 if (!newDown) script.Scroll(hit.point.y - add.y);
                 add = new Vector3(hit.point.x, hit.point.y, 0);
                 points.Add(add);
@@ -106,13 +106,30 @@ public class Line : MonoBehaviour
         mesh.Clear();
         filters.mesh = empty;
         collision.sharedMesh = empty;
-        if (makeMesh) {
+        if (makeMesh && sumDistance > 0.01f) {
             drawn.BakeMesh(mesh, main, true);
             filters.mesh = mesh;
             collision.sharedMesh = mesh;
         }
     }
 
+    //Shrink line on trigger enter
+    private void OnTriggerEnter(Collider collision)
+    {
+        if (collision.CompareTag("Respawn")) {
+            int p = 0;
+            float dist = Vector3.Distance(collision.gameObject.transform.position, points[0]);
+            for (int i = 0; i < points.Count; i++) {
+                if (Vector3.Distance(collision.gameObject.transform.position, points[i]) < dist) {
+                    dist = Vector3.Distance(collision.gameObject.transform.position, points[i]);
+                    p = i;
+                }
+            }
+            for (int i = 0; i < p; i++) points[i] = points[p];
+        }
+    }
+
+    //Switch case for line design
     public void Design(int index)
     {
         switch (index) {
