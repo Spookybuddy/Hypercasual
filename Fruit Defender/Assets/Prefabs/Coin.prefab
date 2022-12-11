@@ -224,8 +224,8 @@ MonoBehaviour:
   rotateAxis: {x: 0, y: 0, z: 1}
   alertSound: {fileID: 8300000, guid: 60c96565c9aa4cd4a9732be359a02eae, type: 3}
   whistleSound: {fileID: 8300000, guid: c2848b9c6575c5642b4f65ec188cdf3a, type: 3}
-  hitSound: {fileID: 8300000, guid: 32f84d29900527e4685df5ceddb8fa0e, type: 3}
-  yesSound: {fileID: 8300000, guid: cc0be137304ecad4cad846d64a44dccc, type: 3}
+  hitSound: {fileID: 8300000, guid: cc0be137304ecad4cad846d64a44dccc, type: 3}
+  bounceSound: {fileID: 8300000, guid: 32f84d29900527e4685df5ceddb8fa0e, type: 3}
   X:
   - {x: 4.5, y: 4, z: 3.5}
   - {x: 4.6, y: 4, z: 3.25}
@@ -242,3 +242,4 @@ MonoBehaviour:
   - {x: 8.5, y: 9, z: 9.9}
   - {x: 10, y: 10.5, z: 11.4}
   - {x: 11.5, y: 11, z: 12.5}
+  particles: {fileID: 0}

@@ -14,8 +14,9 @@ public class Objects : MonoBehaviour
 
     public bool goodBad;
     public Vector3 rotateAxis;
-    public AudioClip alertSound, whistleSound, hitSound, yesSound;
+    public AudioClip alertSound, whistleSound, hitSound, bounceSound;
     public Vector3[] X, Y;
+    public GameObject particles;
 
     void Start()
     {
@@ -49,18 +50,27 @@ public class Objects : MonoBehaviour
         if (!MR.isVisible && Vector3.Distance(spawn, transform.position) > 4 && !paused) Destroy(gameObject);
     }
 
+    //Play sound & Die on hit
+    private void Explode()
+    {
+        if (goodBad) script.currency += 10;
+        else Instantiate(particles, transform.position, Quaternion.identity);
+        script.Play(hitSound, 0.3f);
+        Destroy(gameObject);
+    }
+
     //Add force
     private void Force()
     {
         int type = Random.Range(0, 3);
         int index = Mathf.RoundToInt(Mathf.Clamp(-spawn.y, 0, 6));
-        //Debug.Log(index + ": " + type);
         rig.useGravity = true;
         rig.AddForce(new Vector3(X[index][type] * -Mathf.Sign(spawn.x), Y[index][type], 0), ForceMode.Impulse);
         script.Play(whistleSound, 0.3f);
         regain = false;
     }
 
+    //Check if game is paused before adding force
     private IEnumerator waitFor()
     {
         yield return new WaitForSeconds(0.75f);
@@ -68,16 +78,23 @@ public class Objects : MonoBehaviour
         else regain = true;
     }
 
+    //Hit lines
     void OnTriggerEnter(Collider collision)
     {
-        if (goodBad && collision.CompareTag("Finish")) {
-            Destroy(gameObject);
-            script.currency += 10;
-            script.Play(yesSound, 0.3f);
+        if (goodBad) {
+            if (collision.CompareTag("Finish")) Explode();
+            else script.Play(bounceSound, 0.3f);
         } else if (!collision.CompareTag("Respawn")) {
             script.points++;
-            script.Play(hitSound, 0.3f);
+            Explode();
         }
-        if (!goodBad) Destroy(gameObject);
+    }
+
+    void OnCollisionEnter(Collision collide)
+    {
+        if (collide.collider.CompareTag("Finish") && !goodBad) {
+            collide.rigidbody.AddForce(-collide.relativeVelocity * 1.5f * Time.deltaTime, ForceMode.Impulse);
+            Explode();
+        }
     }
 }

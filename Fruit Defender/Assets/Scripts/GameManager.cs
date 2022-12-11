@@ -9,7 +9,7 @@ public class GameManager : MonoBehaviour
     //menus
     public TextMeshProUGUI score, total, record, wallet, gamedown, loginBonus, timer;
     public Slider[] sound;
-    public GameObject rMenu, pMenu, mMenu, gMenu, gOver, sMenu, sBase, sLine, sBack, sFruit, confirm, refuse, trophy, treasure, arise, recieve, title, optMenu, optMen2, tMenu, checklist;
+    public GameObject rMenu, pMenu, mMenu, gMenu, gOver, sMenu, sBase, sLine, sBack, sFruit, confirm, refuse, trophy, treasure, arise, recieve, title, optMenu, optMen2, tMenu, checklist, money, scored;
     public GameObject[] shopScroll, spawns;
     public AudioSource MusicM, MusicG, SFX;
     public AudioClip loseTwang, buyFail, buySucc, menuBoop, menuBack;
@@ -27,6 +27,7 @@ public class GameManager : MonoBehaviour
     public Backgrounds BG;
     public Fruits FT;
     public Line LN;
+    public Tutorial TT;
     public int[] DESIGNS;
     private float difficultyTime, scrollDis, cooldown;
     public int countdown, points;
@@ -165,8 +166,8 @@ public class GameManager : MonoBehaviour
         timer.text = (difficultyTime / 60).ToString("00") + ":" + (difficultyTime % 60).ToString("00");
         score.text = "Score: " + points.ToString();
         total.text = "Final Score:\n" + points.ToString();
-        if (record != null) record.text = "Record: " + best.ToString();
-        if (wallet != null) wallet.text = "$" + currency.ToString();
+        record.text = best.ToString();
+        wallet.text = currency.ToString("00000");
         if (countdown != 0) gamedown.text = countdown.ToString();
         else gamedown.text = " ";
 
@@ -224,10 +225,13 @@ public class GameManager : MonoBehaviour
         }
 
         //Give time to read tutorial text & trigger next on tap
-        if (Input.GetMouseButton(0) && read && tutoring && sub < checklist.transform.childCount - 1) {
+        if (Input.GetMouseButton(0) && TT.requirement && read && tutoring && sub < checklist.transform.childCount - 1) {
             sub = Mathf.Clamp(sub + 1, 0, checklist.transform.childCount - 1);
+            ShowMenus();
             read = false;
             StartCoroutine(Tutor());
+            TT = checklist.transform.GetChild(sub).GetComponent<Tutorial>();
+            TT.Reset();
         }
     }
 
@@ -289,10 +293,20 @@ public class GameManager : MonoBehaviour
         Application.Quit();
     }
 
+    //Fruit position
+    private void Reset()
+    {
+        trophy.transform.position = Vector3.zero;
+        trophy.transform.eulerAngles = Vector3.zero;
+        Rigidbody component = trophy.GetComponent<Rigidbody>();
+        component.velocity = Vector3.zero;
+        component.angularVelocity = Vector3.zero;
+    }
+
     //Chain rewards
     private void Rewards()
     {
-        currency += chain * 5;
+        currency = Mathf.Clamp(currency + chain * 5, 0, 99999);
         loginBonus.text = "$" + (chain * 5).ToString();
         SaveData("LastLogin", day);
         SaveData("LastMonth", month);
@@ -341,8 +355,9 @@ public class GameManager : MonoBehaviour
         confirm.SetActive(confirming);
         refuse.SetActive(rejecting);
         gOver.SetActive((!MR.isVisible && !mained && !shopping && !options && !op2 && !paused && !tutoring));
-        wallet.gameObject.SetActive(!rewarding && !canDraw);
-        tMenu.SetActive(tutoring && !mained);
+        money.SetActive(!rewarding && !canDraw && !paused && !options && !op2);
+        scored.SetActive(!rewarding && !canDraw && !paused && !options && !op2 && !(lines || fruit || backs));
+        tMenu.SetActive(tutoring && !mained && !shopping && !options);
         for (int i = 0; i < checklist.transform.childCount; i++) checklist.transform.GetChild(i).gameObject.SetActive(false);
         checklist.transform.GetChild(sub).gameObject.SetActive(true);
     }
@@ -369,7 +384,7 @@ public class GameManager : MonoBehaviour
     //Accept the daily rewards
     public void Accept()
     {
-        wallet.gameObject.SetActive(true);
+        money.gameObject.SetActive(true);
         Destroy(chest);
         mained = true;
         rewarding = false;
@@ -384,6 +399,7 @@ public class GameManager : MonoBehaviour
             paused = false;
             mained = false;
             tutoring = false;
+            Reset();
         }
     }
 
@@ -395,6 +411,8 @@ public class GameManager : MonoBehaviour
             mained = false;
             paused = false;
             read = false;
+            TT = checklist.transform.GetChild(sub).GetComponent<Tutorial>();
+            TT.Reset();
             StartCoroutine(Tutor());
         } else Game();
     }
@@ -426,18 +444,14 @@ public class GameManager : MonoBehaviour
         mained = onOff;
         paused = !onOff;
         difficultyTime = 0;
-        trophy.transform.position = Vector3.zero;
-        trophy.transform.eulerAngles = Vector3.zero;
-        Rigidbody component = trophy.GetComponent<Rigidbody>();
-        component.velocity = Vector3.zero;
-        component.angularVelocity = Vector3.zero;
+        Reset();
 
         //Record highest, double reward $
         if (points > best) {
-            best = points;
-            currency += best;
+            best = Mathf.Clamp(points, 0, 99999);
+            currency = Mathf.Clamp(currency + best, 0, 99999);
         }
-        currency += points;
+        currency = Mathf.Clamp(currency + points, 0, 99999);
         points = 0;
         Erase();
         foreach(GameObject menu in shopScroll) menu.transform.localPosition = Vector3.zero;

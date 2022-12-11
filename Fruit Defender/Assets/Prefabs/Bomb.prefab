@@ -226,6 +226,7 @@ MonoBehaviour:
   - {x: 8.5, y: 9, z: 9.9}
   - {x: 10, y: 10.5, z: 11.4}
   - {x: 11.5, y: 11, z: 12.5}
+  particles: {fileID: 369988575707987944, guid: 7cecf2f555fc96545880e0f082b2071d, type: 3}
 --- !u!1 &8840311754964726991
 GameObject:
   m_ObjectHideFlags: 0
@@ -238,7 +239,7 @@ GameObject:
   - component: {fileID: 4135122501903103086}
   - component: {fileID: 3551497474214649514}
   m_Layer: 5
-  m_Name: Particle System
+  m_Name: Fuse
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
