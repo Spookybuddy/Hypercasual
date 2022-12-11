@@ -9,19 +9,19 @@ public class GameManager : MonoBehaviour
     //menus
     public TextMeshProUGUI score, total, record, wallet, gamedown, loginBonus, timer;
     public Slider[] sound;
-    public GameObject rMenu, pMenu, mMenu, gMenu, gOver, sMenu, sBase, sLine, sBack, sFruit, confirm, refuse, trophy, treasure, arise, recieve, title, optMenu, optMen2;
+    public GameObject rMenu, pMenu, mMenu, gMenu, gOver, sMenu, sBase, sLine, sBack, sFruit, confirm, refuse, trophy, treasure, arise, recieve, title, optMenu, optMen2, tMenu, checklist;
     public GameObject[] shopScroll, spawns;
     public AudioSource MusicM, MusicG, SFX;
     public AudioClip loseTwang, buyFail, buySucc, menuBoop, menuBack;
     private Renderer MR;
-    private int maxObjects, currentMenu, past;
+    private int maxObjects, currentMenu, past, sub;
     private GameObject chest;
     public GameObject[] prefab1, prefab2;
     private GameObject[,] prefabs;
     private List<Vector3> warnings = new List<Vector3>();
     private List<GameObject> actives = new List<GameObject>();
     public bool canDraw, canDoodle;
-    private bool mained, paused, shopping, lines, backs, fruit, confirming, rejecting, tutoring, rewarding, triggered, options, op2;
+    private bool mained, paused, shopping, lines, backs, fruit, confirming, rejecting, tutoring, rewarding, triggered, options, op2, read;
     private Vector2 price;
     private Vector3 local;
     public Backgrounds BG;
@@ -87,7 +87,8 @@ public class GameManager : MonoBehaviour
         shopping = false;
         options = false;
         op2 = false;
-        //tutoring = true;
+        tutoring = true;
+        sub = 0;
         maxObjects = 0;
         MR = trophy.GetComponent<Renderer>();
 
@@ -154,7 +155,7 @@ public class GameManager : MonoBehaviour
         maxObjects = canDraw ? past : 0;
 
         //Add timer, max objects based on time passed
-        if (canDraw && countdown == 0) {
+        if (canDraw && countdown == 0 && !tutoring) {
             difficultyTime += Time.deltaTime;
             cooldown -= Time.deltaTime;
         }
@@ -173,7 +174,7 @@ public class GameManager : MonoBehaviour
         if (!MR.isVisible && !mained && !rewarding && !shopping) Over();
 
         //Spawn new bomb when #bomb is below desired amount
-        if (actives.Count < past && canDraw && countdown == 0 && cooldown < 0) {
+        if (actives.Count < past && canDraw && countdown == 0 && cooldown < 0 && !tutoring) {
             //Find a spot far enough away from other bombs
             bool clear = false;
             while (!clear) {
@@ -220,6 +221,13 @@ public class GameManager : MonoBehaviour
         Transform cashForm = arise.transform;
         if (arise.activeInHierarchy && cashForm.localPosition.y < 0.1f) {
             cashForm.localPosition = new Vector3(0, Mathf.MoveTowards(cashForm.localPosition.y, 0, Time.deltaTime * -cashForm.localPosition.y * 1.5f), -2000);
+        }
+
+        //Give time to read tutorial text & trigger next on tap
+        if (Input.GetMouseButton(0) && read && tutoring && sub < checklist.transform.childCount - 1) {
+            sub = Mathf.Clamp(sub + 1, 0, checklist.transform.childCount - 1);
+            read = false;
+            StartCoroutine(Tutor());
         }
     }
 
@@ -323,7 +331,7 @@ public class GameManager : MonoBehaviour
         rMenu.SetActive(rewarding);
         mMenu.SetActive(mained && !rewarding);
         pMenu.SetActive(paused);
-        gMenu.SetActive(canDraw);
+        gMenu.SetActive(canDraw && !tutoring);
         sMenu.SetActive(shopping);
         optMenu.SetActive(options);
         sBase.SetActive(!(lines || fruit || backs));
@@ -332,8 +340,11 @@ public class GameManager : MonoBehaviour
         sBack.SetActive(backs);
         confirm.SetActive(confirming);
         refuse.SetActive(rejecting);
-        gOver.SetActive((!MR.isVisible && !mained && !shopping && !options && !op2 && !paused));
+        gOver.SetActive((!MR.isVisible && !mained && !shopping && !options && !op2 && !paused && !tutoring));
         wallet.gameObject.SetActive(!rewarding && !canDraw);
+        tMenu.SetActive(tutoring && !mained);
+        for (int i = 0; i < checklist.transform.childCount; i++) checklist.transform.GetChild(i).gameObject.SetActive(false);
+        checklist.transform.GetChild(sub).gameObject.SetActive(true);
     }
 
     //Update slider displays
@@ -367,12 +378,25 @@ public class GameManager : MonoBehaviour
     //Gameplay
     public void Game()
     {
-        if (!rewarding && !shopping && mained) {
+        if (!rewarding && !shopping && (mained || tutoring)) {
             countdown = 3;
             StartCoroutine(Delay());
             paused = false;
             mained = false;
+            tutoring = false;
         }
+    }
+
+    //Tutorial
+    public void Help()
+    {
+        if (tutoring) {
+            sub = 0;
+            mained = false;
+            paused = false;
+            read = false;
+            StartCoroutine(Tutor());
+        } else Game();
     }
 
     //Function takes NXXX, with N being design number & XXX being cost
@@ -593,6 +617,13 @@ public class GameManager : MonoBehaviour
     {
         yield return new WaitForSeconds(time);
         menu.SetActive(true);
+    }
+
+    //Delay to read tutorial text
+    private IEnumerator Tutor()
+    {
+        yield return new WaitForSeconds(2);
+        read = true;
     }
 
     //"Not enough cash" message lasts for 1.25sec
