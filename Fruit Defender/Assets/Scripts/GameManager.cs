@@ -9,7 +9,7 @@ public class GameManager : MonoBehaviour
     //menus
     public TextMeshProUGUI score, total, record, wallet, gamedown, loginBonus, timer;
     public Slider[] sound;
-    public GameObject rMenu, pMenu, mMenu, gMenu, gOver, sMenu, sBase, sLine, sBack, sFruit, confirm, refuse, trophy, treasure, arise, recieve, title, optMenu, optMen2, tMenu, checklist, money, scored;
+    public GameObject rMenu, pMenu, mMenu, gMenu, gOver, sMenu, sBase, sLine, sBack, sFruit, confirm, refuse, trophy, treasure, arise, recieve, title, optMenu, optMen2, tMenu, checklist, money, scored, gamer;
     public GameObject[] shopScroll, spawns;
     public AudioSource MusicM, MusicG, SFX;
     public AudioClip loseTwang, buyFail, buySucc, menuBoop, menuBack;
@@ -164,7 +164,7 @@ public class GameManager : MonoBehaviour
 
         //Update texts
         timer.text = (difficultyTime / 60).ToString("00") + ":" + (difficultyTime % 60).ToString("00");
-        score.text = "Score: " + points.ToString();
+        score.text = points.ToString();
         total.text = "Final Score:\n" + points.ToString();
         record.text = best.ToString();
         wallet.text = currency.ToString("00000");
@@ -335,7 +335,8 @@ public class GameManager : MonoBehaviour
     //Remove the price of designs already purchased
     public void SetText(int ID)
     {
-        shopScroll[currentMenu].transform.GetChild(ID).GetChild(1).GetComponent<TextMeshProUGUI>().text = " ";
+        shopScroll[currentMenu].transform.GetChild(ID).GetChild(1).GetComponent<TextMeshProUGUI>().text = "Own";
+        shopScroll[currentMenu].transform.GetChild(ID).GetChild(1).GetComponent<TextMeshProUGUI>().color = Color.green;
     }
 
     //Show desired menu
@@ -346,6 +347,7 @@ public class GameManager : MonoBehaviour
         mMenu.SetActive(mained && !rewarding);
         pMenu.SetActive(paused);
         gMenu.SetActive(canDraw && !tutoring);
+        gamer.SetActive(!mained && !shopping && !op2 && !options && !rewarding && MR.isVisible);
         sMenu.SetActive(shopping);
         optMenu.SetActive(options);
         sBase.SetActive(!(lines || fruit || backs));
@@ -354,7 +356,7 @@ public class GameManager : MonoBehaviour
         sBack.SetActive(backs);
         confirm.SetActive(confirming);
         refuse.SetActive(rejecting);
-        gOver.SetActive((!MR.isVisible && !mained && !shopping && !options && !op2 && !paused && !tutoring));
+        gOver.SetActive(!MR.isVisible && !mained && !shopping && !options && !op2 && !paused && !tutoring);
         money.SetActive(!rewarding && !canDraw && !paused && !options && !op2);
         scored.SetActive(!rewarding && !canDraw && !paused && !options && !op2 && !(lines || fruit || backs));
         tMenu.SetActive(tutoring && !mained && !shopping && !options);
@@ -538,6 +540,8 @@ public class GameManager : MonoBehaviour
     public void SubMenu(int menu)
     {
         currentMenu = Mathf.Max(menu - 1, 0);
+        confirming = false;
+        rejecting = false;
         Shop();
         lines = (menu == 1);
         fruit = (menu == 2);
