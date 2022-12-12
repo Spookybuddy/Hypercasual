@@ -52,7 +52,6 @@ public class GameManager : MonoBehaviour
     {
         //Screen resolution
         scrollDis = Mathf.Clamp(Screen.height / 10, 120, 300);
-        Debug.Log(Screen.width + " : " + Screen.height);
     }
 
     void Start()
@@ -165,7 +164,7 @@ public class GameManager : MonoBehaviour
         //Update texts
         timer.text = (difficultyTime / 60).ToString("00") + ":" + (difficultyTime % 60).ToString("00");
         score.text = points.ToString();
-        total.text = "Final Score:\n" + points.ToString();
+        total.text = points.ToString();
         record.text = best.ToString();
         wallet.text = currency.ToString("00000");
         if (countdown != 0) gamedown.text = countdown.ToString();
@@ -178,14 +177,18 @@ public class GameManager : MonoBehaviour
         if (actives.Count < past && canDraw && countdown == 0 && cooldown < 0 && !tutoring) {
             //Find a spot far enough away from other bombs
             bool clear = false;
+            float giveUp = 3;
             while (!clear) {
                 int height = Random.Range(-5 - (int)Mathf.Clamp01(past / 5), -1 + (int)Mathf.Clamp(past / 8, 0, 2));
                 local = new Vector3(spawns[Random.Range(0, 2)].transform.position.x, height, 0);
                 bool good = true;
                 foreach (GameObject actor in actives) {
-                    if (Vector3.Distance(actor.transform.position, local) < 4) good = false;
+                    if (actor != null) {
+                        if (Vector3.Distance(actor.transform.position, local) < 4) good = false;
+                    }
                 }
-                clear = good;
+                giveUp -= Time.deltaTime;
+                clear = (good || giveUp < 0);
             }
 
             int weighted = Mathf.FloorToInt(Random.Range(0, 8) / 7);
