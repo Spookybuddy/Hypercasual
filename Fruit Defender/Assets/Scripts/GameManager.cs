@@ -12,7 +12,7 @@ public class GameManager : MonoBehaviour
     public GameObject rMenu, pMenu, mMenu, gMenu, gOver, sMenu, sBase, sLine, sBack, sFruit, confirm, refuse, trophy, treasure, arise, recieve, title, optMenu, optMen2, tMenu, checklist, money, scored, gamer;
     public GameObject[] shopScroll, spawns;
     public AudioSource MusicM, MusicG, SFX;
-    public AudioClip loseTwang, buyFail, buySucc, menuBoop, menuBack;
+    public AudioClip loseTwang, buyFail, buySucc;
     private Renderer MR;
     private int maxObjects, currentMenu, past, sub;
     private GameObject chest;
