@@ -10,11 +10,19 @@ Bombs will destroy your line on impact!
 
 How high can you score?
 
-# TODO:
-UI Adjustments!
+# Future improvements:
+The game is finished, but maybe I'll come back to it and add...
 
-Tutorial!
+Cherry, Peach, Plum & Dragonfruit
 
-Playtesting?
+Improved Backgrounds
 
-Bug Fixes!
+# Gameplay Variations?
+
+Different Gamemodes?
+
+Change-up Gameplay Loop?
+
+Move Fruit?
+
+Draw Meter? Limit line to certain length from start, preventing spam?
